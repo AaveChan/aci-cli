@@ -44,6 +44,10 @@ exploreAaveUsersCmd.option(
   "Display a progress bar while fetching",
   false
 );
+exploreAaveUsersCmd.option(
+  "--no-interactive",
+  "Disable interactive prompts — all arguments must be provided or the command fails"
+);
 exploreAaveUsersCmd.action(exploreAaveUsersAction);
 
 export const program = new Command();

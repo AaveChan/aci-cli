@@ -8,7 +8,10 @@ import { Token, getTokenHolders } from "@/lib/token-holders/token-holders";
 
 type TokenType = "supply" | "borrow";
 
-const resolveMarket = async (marketName?: string): Promise<AaveMarket> => {
+const resolveMarket = async (
+  marketName?: string,
+  interactive = true
+): Promise<AaveMarket> => {
   if (marketName) {
     const found = AAVE_MARKETS.find((m) => m.name === marketName);
     if (!found) {
@@ -17,6 +20,12 @@ const resolveMarket = async (marketName?: string): Promise<AaveMarket> => {
       );
     }
     return found;
+  }
+
+  if (!interactive) {
+    throw new Error(
+      `Missing required argument: market. Available: ${AAVE_MARKETS.map((m) => m.name).join(", ")}`
+    );
   }
 
   const { market } = await prompts({
@@ -35,7 +44,8 @@ const resolveMarket = async (marketName?: string): Promise<AaveMarket> => {
 
 const resolveAsset = async (
   market: AaveMarket,
-  assetSymbol?: string
+  assetSymbol?: string,
+  interactive = true
 ): Promise<string> => {
   const symbols = Object.keys(market.market.ASSETS);
 
@@ -46,6 +56,12 @@ const resolveAsset = async (
       );
     }
     return assetSymbol;
+  }
+
+  if (!interactive) {
+    throw new Error(
+      `Missing required argument: asset. Available in ${market.name}: ${symbols.join(", ")}`
+    );
   }
 
   const { asset } = await prompts({
@@ -59,12 +75,19 @@ const resolveAsset = async (
   return asset;
 };
 
-const resolveTokenType = async (tokenType?: string): Promise<TokenType> => {
+const resolveTokenType = async (
+  tokenType?: string,
+  interactive = true
+): Promise<TokenType> => {
   if (tokenType) {
     if (tokenType !== "supply" && tokenType !== "borrow") {
       throw new Error(`tokenType must be "supply" or "borrow"`);
     }
     return tokenType;
+  }
+
+  if (!interactive) {
+    throw new Error(`Missing required argument: tokenType. Must be "supply" or "borrow"`);
   }
 
   const { type } = await prompts({
@@ -89,11 +112,12 @@ export const exploreAaveUsersAction = async (
     blockNumber,
     top,
     progressBar,
-  }: { blockNumber?: string; top?: string; progressBar?: boolean }
+    interactive = true,
+  }: { blockNumber?: string; top?: string; progressBar?: boolean; interactive?: boolean }
 ) => {
-  const market = await resolveMarket(marketArg);
-  const assetSymbol = await resolveAsset(market, assetArg);
-  const tokenType = await resolveTokenType(tokenTypeArg);
+  const market = await resolveMarket(marketArg, interactive);
+  const assetSymbol = await resolveAsset(market, assetArg, interactive);
+  const tokenType = await resolveTokenType(tokenTypeArg, interactive);
 
   const rpcUrl = process.env[market.rpcEnvVar];
   if (!rpcUrl) {
