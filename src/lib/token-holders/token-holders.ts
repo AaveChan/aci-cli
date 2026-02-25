@@ -134,6 +134,11 @@ export const getEvents = async (
 
   if (cache) {
     events = cache.events;
+    if (endBlock <= cache.maxBlock) {
+      console.log(
+        `[cache] Cache hit for ${token.name} on ${networkName} (cached up to block ${cache.maxBlock}, requested ${endBlock}). No RPC fetch needed.`
+      );
+    }
   }
 
   if (!cache || endBlock > cache.maxBlock) {
@@ -141,6 +146,16 @@ export const getEvents = async (
       cache && endBlock > cache.maxBlock
         ? cache.maxBlock
         : token.deploymentBlock;
+
+    if (!cache) {
+      console.log(
+        `[cache] No cache found for ${token.name} on ${networkName}. Fetching from block ${startBlock} to ${endBlock}...`
+      );
+    } else {
+      console.log(
+        `[cache] Partial cache hit for ${token.name} on ${networkName} (cached up to block ${cache.maxBlock}). Fetching delta from ${startBlock} to ${endBlock}...`
+      );
+    }
 
     const newEvents = await fetchEvents(
       token.address,
