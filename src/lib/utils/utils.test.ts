@@ -4,7 +4,7 @@ import { fetchInBatches, mergeMap, retryRequest } from "./utils";
 const mockFetchFunction = async (
   user: number,
   param1: string,
-  param2: string
+  param2: string,
 ) => {
   return { user, param1, param2 };
 };
@@ -31,7 +31,7 @@ describe("fetchInBatches function", () => {
       testData,
       mockFetchFunction,
       testParams,
-      batchSize
+      batchSize,
     );
 
     const expectedResults = [
@@ -65,7 +65,7 @@ describe("fetchInBatches function", () => {
           "0x4801eB5a2A6E2D04F019098364878c70a05158F1",
           "0xa7073ca54734faBa5aFa5F1e01Cd31a03Ff7699F",
         ],
-      ])
+      ]),
     );
   });
 
@@ -90,7 +90,7 @@ describe("fetchInBatches function", () => {
           "0x4801eB5a2A6E2D04F019098364878c70a05158F1",
           "0x329c54289Ff5D6B7b7daE13592C6B1EDA1543eD4",
         ],
-      ])
+      ]),
     );
   });
 

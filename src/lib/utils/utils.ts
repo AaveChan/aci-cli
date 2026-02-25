@@ -1,7 +1,7 @@
 export const retryRequest = async <T>(
   request: Promise<T>,
   iterations = 3,
-  wait = 600000
+  wait = 600000,
 ): Promise<T> => {
   for (let i = 0; i < iterations; i++) {
     try {
@@ -22,7 +22,7 @@ export const fetchInBatches = async <T, P extends object, B>(
   fetchFunction: (users: T, ...args: any[]) => Promise<B>,
   params: P,
   batchSize = 10,
-  wait = 0
+  wait = 0,
 ) => {
   const results = [];
 
@@ -30,8 +30,8 @@ export const fetchInBatches = async <T, P extends object, B>(
     const dataBatch = data.slice(i, i + batchSize);
     const resultsBatch = await Promise.all(
       dataBatch.map((dataItem) =>
-        retryRequest(fetchFunction(dataItem, ...Object.values(params)))
-      )
+        retryRequest(fetchFunction(dataItem, ...Object.values(params))),
+      ),
     );
     results.push(...resultsBatch);
     await new Promise((resolve) => setTimeout(resolve, wait));

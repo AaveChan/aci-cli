@@ -3,13 +3,13 @@ import { AAVE_MARKETS, AaveMarket } from "@/lib/aave/markets";
 
 export const resolveMarket = async (
   marketName?: string,
-  interactive = true
+  interactive = true,
 ): Promise<AaveMarket> => {
   if (marketName) {
     const found = AAVE_MARKETS.find((m) => m.name === marketName);
     if (!found) {
       throw new Error(
-        `Unknown market "${marketName}". Available: ${AAVE_MARKETS.map((m) => m.name).join(", ")}`
+        `Unknown market "${marketName}". Available: ${AAVE_MARKETS.map((m) => m.name).join(", ")}`,
       );
     }
     return found;
@@ -17,7 +17,7 @@ export const resolveMarket = async (
 
   if (!interactive) {
     throw new Error(
-      `Missing required argument: market. Available: ${AAVE_MARKETS.map((m) => m.name).join(", ")}`
+      `Missing required argument: market. Available: ${AAVE_MARKETS.map((m) => m.name).join(", ")}`,
     );
   }
 
@@ -38,14 +38,14 @@ export const resolveMarket = async (
 export const resolveAsset = async (
   market: AaveMarket,
   assetSymbol?: string,
-  interactive = true
+  interactive = true,
 ): Promise<string> => {
   const symbols = Object.keys(market.market.ASSETS);
 
   if (assetSymbol) {
     if (!symbols.includes(assetSymbol)) {
       throw new Error(
-        `Unknown asset "${assetSymbol}" in ${market.name}. Available: ${symbols.join(", ")}`
+        `Unknown asset "${assetSymbol}" in ${market.name}. Available: ${symbols.join(", ")}`,
       );
     }
     return assetSymbol;
@@ -53,7 +53,7 @@ export const resolveAsset = async (
 
   if (!interactive) {
     throw new Error(
-      `Missing required argument: asset. Available in ${market.name}: ${symbols.join(", ")}`
+      `Missing required argument: asset. Available in ${market.name}: ${symbols.join(", ")}`,
     );
   }
 

@@ -8,7 +8,7 @@ const getBalanceCmd = new Command("get-balance");
 getBalanceCmd.arguments("address");
 getBalanceCmd.option(
   "-b, --blockNumber [block_number]",
-  "The block number from which to get the balance"
+  "The block number from which to get the balance",
 );
 getBalanceCmd.action(getBalanceAction);
 
@@ -18,60 +18,72 @@ getTokenHoldersCmd.arguments("tokenName");
 getTokenHoldersCmd.arguments("tokenDeploymentBlock");
 getTokenHoldersCmd.option(
   "-b, --blockNumber [block_number]",
-  "The block number from which to get the balance"
+  "The block number from which to get the balance",
 );
 getTokenHoldersCmd.option(
   "-p, --progressBar",
   "Display a progress bar while fetching the token holders",
-  false
+  false,
 );
 getTokenHoldersCmd.action(getTokenHoldersAction);
 
 const exploreAaveUsersCmd = new Command("explore-aave-users");
-exploreAaveUsersCmd.argument("[market]", "Aave market name (e.g. AaveV3Ethereum)");
+exploreAaveUsersCmd.argument(
+  "[market]",
+  "Aave market name (e.g. AaveV3Ethereum)",
+);
 exploreAaveUsersCmd.argument("[asset]", "Asset symbol (e.g. USDC)");
-exploreAaveUsersCmd.argument("[tokenType]", 'Position type: "supply" or "borrow"');
+exploreAaveUsersCmd.argument(
+  "[tokenType]",
+  'Position type: "supply" or "borrow"',
+);
 exploreAaveUsersCmd.option(
   "-b, --blockNumber [block_number]",
-  "The block number snapshot to use"
+  "The block number snapshot to use",
 );
 exploreAaveUsersCmd.option(
   "-n, --top <number>",
   "Number of top holders to display",
-  "10"
+  "10",
 );
 exploreAaveUsersCmd.option(
   "-p, --progressBar",
   "Display a progress bar while fetching",
-  false
+  false,
 );
 exploreAaveUsersCmd.option(
   "--no-interactive",
-  "Disable interactive prompts — all arguments must be provided or the command fails"
+  "Disable interactive prompts — all arguments must be provided or the command fails",
 );
 exploreAaveUsersCmd.action(exploreAaveUsersAction);
 
 const traceBorrowerOutflowsCmd = new Command("trace-borrower-outflows");
-traceBorrowerOutflowsCmd.argument("[market]", "Aave market name (e.g. AaveV3Ethereum)");
+traceBorrowerOutflowsCmd.argument(
+  "[market]",
+  "Aave market name (e.g. AaveV3Ethereum)",
+);
 traceBorrowerOutflowsCmd.argument("[asset]", "Asset symbol (e.g. USDC)");
-traceBorrowerOutflowsCmd.argument("[address]", "Borrower address to trace outflows from");
+traceBorrowerOutflowsCmd.argument(
+  "[address]",
+  "Borrower address to trace outflows from",
+);
 traceBorrowerOutflowsCmd.option(
   "-b, --blockNumber [block_number]",
-  "The block number snapshot to use"
+  "The block number snapshot to use",
 );
 traceBorrowerOutflowsCmd.option(
   "-n, --top <number>",
   "Number of top recipients to display",
-  "10"
+  "10",
 );
 traceBorrowerOutflowsCmd.option(
   "-p, --progressBar",
   "Display a progress bar while fetching borrowers",
-  false
+  false,
 );
 traceBorrowerOutflowsCmd.option(
   "--no-interactive",
-  "Disable interactive prompts — all arguments must be provided or the command fails"
+  "Disable interactive prompts — all arguments must be provided or the command fails",
 );
 traceBorrowerOutflowsCmd.action(traceBorrowerOutflowsAction);
 

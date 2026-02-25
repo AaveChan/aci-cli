@@ -10,7 +10,7 @@ type TokenType = "supply" | "borrow";
 
 const resolveTokenType = async (
   tokenType?: string,
-  interactive = true
+  interactive = true,
 ): Promise<TokenType> => {
   if (tokenType) {
     if (tokenType !== "supply" && tokenType !== "borrow") {
@@ -20,7 +20,9 @@ const resolveTokenType = async (
   }
 
   if (!interactive) {
-    throw new Error(`Missing required argument: tokenType. Must be "supply" or "borrow"`);
+    throw new Error(
+      `Missing required argument: tokenType. Must be "supply" or "borrow"`,
+    );
   }
 
   const { type } = await prompts({
@@ -46,7 +48,12 @@ export const exploreAaveUsersAction = async (
     top,
     progressBar,
     interactive = true,
-  }: { blockNumber?: string; top?: string; progressBar?: boolean; interactive?: boolean }
+  }: {
+    blockNumber?: string;
+    top?: string;
+    progressBar?: boolean;
+    interactive?: boolean;
+  },
 ) => {
   const market = await resolveMarket(marketArg, interactive);
   const assetSymbol = await resolveAsset(market, assetArg, interactive);
@@ -55,7 +62,7 @@ export const exploreAaveUsersAction = async (
   const rpcUrl = process.env[market.rpcEnvVar];
   if (!rpcUrl) {
     throw new Error(
-      `Missing RPC URL for ${market.name}. Set the ${market.rpcEnvVar} environment variable in your .env file.`
+      `Missing RPC URL for ${market.name}. Set the ${market.rpcEnvVar} environment variable in your .env file.`,
     );
   }
 
@@ -80,7 +87,7 @@ export const exploreAaveUsersAction = async (
   };
 
   console.log(
-    `\nFetching ${tokenType === "supply" ? "suppliers" : "borrowers"} for ${colors.green(assetSymbol)} on ${colors.green(market.name)} at block ${endBlock}...\n`
+    `\nFetching ${tokenType === "supply" ? "suppliers" : "borrowers"} for ${colors.green(assetSymbol)} on ${colors.green(market.name)} at block ${endBlock}...\n`,
   );
 
   const holders = await getTokenHolders(token, endBlock, {

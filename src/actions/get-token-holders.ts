@@ -8,7 +8,7 @@ export const getTokenHoldersAction = async (
   tokenAddress: string,
   tokenName: string,
   tokenDeploymentBlock: string,
-  { blockNumber, progressBar }: { blockNumber?: string; progressBar?: boolean }
+  { blockNumber, progressBar }: { blockNumber?: string; progressBar?: boolean },
 ) => {
   if (!isAddress(tokenAddress)) {
     throw new Error("Invalid address");

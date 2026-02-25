@@ -5,5 +5,5 @@ export const progressBar = new cliProgress.SingleBar(
     format:
       "Generation: [{bar}] {percentage}% | ETA: {eta}s | Task: {nextTask}...",
   },
-  cliProgress.Presets.shades_classic
+  cliProgress.Presets.shades_classic,
 );

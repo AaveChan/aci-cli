@@ -3,22 +3,26 @@ import Table from "cli-table3";
 import colors from "colors";
 import { Address, formatUnits } from "viem";
 import { createPublicClientForChain } from "@/clients/viem";
-import { Token, getTokenHolders, fetchAddressOutflows } from "@/lib/token-holders/token-holders";
+import {
+  Token,
+  getTokenHolders,
+  fetchAddressOutflows,
+} from "@/lib/token-holders/token-holders";
 import { resolveMarket, resolveAsset } from "@/lib/aave/resolvers";
 
 const resolveAddress = async (
   holders: Map<Address, bigint>,
   addressArg?: string,
-  interactive = true
+  interactive = true,
 ): Promise<Address> => {
   if (addressArg) {
     const normalized = addressArg.toLowerCase() as Address;
     const found = [...holders.keys()].find(
-      (a) => a.toLowerCase() === normalized
+      (a) => a.toLowerCase() === normalized,
     );
     if (!found) {
       throw new Error(
-        `Address "${addressArg}" is not in the borrower list for this asset.`
+        `Address "${addressArg}" is not in the borrower list for this asset.`,
       );
     }
     return found;
@@ -26,7 +30,7 @@ const resolveAddress = async (
 
   if (!interactive) {
     throw new Error(
-      `Missing required argument: address. Must be one of the top borrowers.`
+      `Missing required argument: address. Must be one of the top borrowers.`,
     );
   }
 
@@ -62,7 +66,7 @@ export const traceBorrowerOutflowsAction = async (
     top?: string;
     progressBar?: boolean;
     interactive?: boolean;
-  }
+  },
 ) => {
   const market = await resolveMarket(marketArg, interactive);
   const assetSymbol = await resolveAsset(market, assetArg, interactive);
@@ -70,7 +74,7 @@ export const traceBorrowerOutflowsAction = async (
   const rpcUrl = process.env[market.rpcEnvVar];
   if (!rpcUrl) {
     throw new Error(
-      `Missing RPC URL for ${market.name}. Set the ${market.rpcEnvVar} environment variable in your .env file.`
+      `Missing RPC URL for ${market.name}. Set the ${market.rpcEnvVar} environment variable in your .env file.`,
     );
   }
 
@@ -89,7 +93,7 @@ export const traceBorrowerOutflowsAction = async (
   };
 
   console.log(
-    `\nFetching borrowers for ${colors.green(assetSymbol)} on ${colors.green(market.name)} at block ${endBlock}...\n`
+    `\nFetching borrowers for ${colors.green(assetSymbol)} on ${colors.green(market.name)} at block ${endBlock}...\n`,
   );
 
   const borrowers = await getTokenHolders(vToken, endBlock, {
@@ -104,14 +108,18 @@ export const traceBorrowerOutflowsAction = async (
   }
 
   // Step 2: select address to trace
-  const selectedAddress = await resolveAddress(borrowers, addressArg, interactive);
+  const selectedAddress = await resolveAddress(
+    borrowers,
+    addressArg,
+    interactive,
+  );
 
   // Step 3: fetch outflows of the underlying asset FROM that address
   const underlyingAddress = assetConfig.UNDERLYING as Address;
   const { decimals } = assetConfig;
 
   console.log(
-    `\nFetching ${colors.green(assetSymbol)} outflows from ${colors.cyan(selectedAddress)} (block ${market.deploymentBlock} → ${endBlock})...\n`
+    `\nFetching ${colors.green(assetSymbol)} outflows from ${colors.cyan(selectedAddress)} (block ${market.deploymentBlock} → ${endBlock})...\n`,
   );
 
   if (progressBar) progressBar && console.log(); // spacing before bar if used
@@ -121,7 +129,7 @@ export const traceBorrowerOutflowsAction = async (
     market.deploymentBlock,
     endBlock,
     false, // progress bar not wired here yet
-    client
+    client,
   );
 
   if (outflows.length === 0) {
@@ -155,7 +163,7 @@ export const traceBorrowerOutflowsAction = async (
   });
 
   console.log(
-    `\nTop ${topN} recipients of ${colors.green(assetSymbol)} from ${colors.cyan(selectedAddress)}:\n`
+    `\nTop ${topN} recipients of ${colors.green(assetSymbol)} from ${colors.cyan(selectedAddress)}:\n`,
   );
   console.log(table.toString());
 };

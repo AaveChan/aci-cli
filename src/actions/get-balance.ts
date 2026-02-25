@@ -5,7 +5,7 @@ import colors from "colors";
 
 export const getBalanceAction = async (
   address: string,
-  { blockNumber }: { blockNumber?: string }
+  { blockNumber }: { blockNumber?: string },
 ) => {
   if (!isAddress(address)) {
     throw new Error("Invalid address");
