@@ -121,4 +121,11 @@ export const exploreAaveUsersAction = async (
   });
 
   console.log(table.toString());
+
+  if (tokenType === "borrow") {
+    console.log(
+      `\nTip: trace where a borrower sent their ${colors.green(assetSymbol)} using:\n` +
+        `  ${colors.cyan(`bun run trace-borrower-outflows ${market.name} ${assetSymbol} <address>`)}\n`,
+    );
+  }
 };
