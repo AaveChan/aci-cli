@@ -115,6 +115,63 @@ export const fetchEvents = async (
   return parsedEvents;
 };
 
+export const fetchAddressOutflows = async (
+  tokenAddress: Address,
+  fromAddress: Address,
+  startBlock: bigint,
+  endBlock: bigint,
+  displayProgressBar = false,
+  client: PublicClient = publicClient
+): Promise<TransferEvent[]> => {
+  const step = 10n * 10000n; // same defaults as fetchEvents
+
+  const events = [];
+  for (let chunk = startBlock; chunk <= endBlock; chunk += step) {
+    if (displayProgressBar) {
+      progressBar.update(
+        ((Number(chunk) - Number(startBlock)) * 20) /
+          (Number(endBlock) - Number(startBlock)),
+        { nextTask: "Get outflow events" }
+      );
+    }
+
+    const eventsPromise = [];
+    for (
+      let fromBlock = chunk;
+      fromBlock + 10000n <= chunk + step && fromBlock <= endBlock;
+      fromBlock += 10000n
+    ) {
+      let toBlock = fromBlock + 10000n - 1n;
+      if (toBlock > endBlock) toBlock = endBlock;
+
+      eventsPromise.push(
+        retryRequest(
+          client.getContractEvents({
+            address: tokenAddress,
+            abi: erc20Abi,
+            eventName: "Transfer",
+            args: { from: fromAddress },
+            fromBlock,
+            toBlock,
+          })
+        )
+      );
+    }
+
+    const eventsChunk = await Promise.all(eventsPromise);
+    for (const chunk of eventsChunk) events.push(...chunk);
+  }
+
+  return events
+    .map((event) => ({
+      from: event.args.from,
+      to: event.args.to,
+      value: event.args.value,
+      blockNumber: event.blockNumber,
+    }))
+    .filter((e) => e !== null) as TransferEvent[];
+};
+
 export const getEvents = async (
   token: Token,
   network: Chain,
