@@ -9,7 +9,7 @@ export const saveDataToJSON = <T>(
   data: T,
   dirPath: string,
   fileName: string,
-  displayLogs = true
+  displayLogs = true,
 ) => {
   if (!fs.existsSync(dirPath)) {
     fs.mkdirSync(dirPath, { recursive: true });
@@ -17,19 +17,19 @@ export const saveDataToJSON = <T>(
 
   fs.writeFileSync(
     `${dirPath}/${fileName}.json`,
-    JSON.stringify(data, replacer, 2)
+    JSON.stringify(data, replacer, 2),
   );
 
   if (displayLogs) {
     console.log(
-      `\nJSON successfully generated at ${dirPath.slice(1)}/${fileName}.json`
+      `\nJSON successfully generated at ${dirPath.slice(1)}/${fileName}.json`,
     );
   }
 };
 
 export const loadERC20TransferEventsFromLocalCache = (
   networkName: string,
-  erc20Name: string
+  erc20Name: string,
 ): GetTransferEvents => {
   const baseDir = `./cache/erc-20/${networkName}/${erc20Name}/transfers`;
 
@@ -58,7 +58,7 @@ export const loadERC20TransferEventsFromLocalCache = (
   const transferEvents = fs.readFileSync(`${baseDir}/${files[0]}`, "utf-8");
   let transferEventsParsed: TransferEvent[] = JSON.parse(
     transferEvents,
-    reviver
+    reviver,
   );
 
   transferEventsParsed = transferEventsParsed.map((event) => {

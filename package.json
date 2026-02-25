@@ -3,10 +3,15 @@
   "version": "1.0.0",
   "description": "",
   "scripts": {
+    "prepare": "git config core.hooksPath .githooks",
+    "lint": "eslint 'src/**/*.ts'",
+    "format": "prettier --write 'src/**/*.ts'",
+    "format:check": "prettier --check 'src/**/*.ts'",
     "test": "jest --coverage",
     "get-balance": "ts-node -r tsconfig-paths/register ./src/cli/cli.ts get-balance",
     "get-token-holders": "ts-node -r tsconfig-paths/register ./src/cli/cli.ts get-token-holders",
-    "explore-aave-users": "ts-node -r tsconfig-paths/register ./src/cli/cli.ts explore-aave-users"
+    "explore-aave-users": "ts-node -r tsconfig-paths/register ./src/cli/cli.ts explore-aave-users",
+    "trace-borrower-outflows": "ts-node -r tsconfig-paths/register ./src/cli/cli.ts trace-borrower-outflows"
   },
   "keywords": [],
   "author": "",

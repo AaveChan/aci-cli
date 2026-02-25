@@ -2,82 +2,15 @@ import prompts from "prompts";
 import Table from "cli-table3";
 import colors from "colors";
 import { Address, formatUnits } from "viem";
-import { AAVE_MARKETS, AaveMarket } from "@/lib/aave/markets";
 import { createPublicClientForChain } from "@/clients/viem";
 import { Token, getTokenHolders } from "@/lib/token-holders/token-holders";
+import { resolveMarket, resolveAsset } from "@/lib/aave/resolvers";
 
 type TokenType = "supply" | "borrow";
 
-const resolveMarket = async (
-  marketName?: string,
-  interactive = true
-): Promise<AaveMarket> => {
-  if (marketName) {
-    const found = AAVE_MARKETS.find((m) => m.name === marketName);
-    if (!found) {
-      throw new Error(
-        `Unknown market "${marketName}". Available: ${AAVE_MARKETS.map((m) => m.name).join(", ")}`
-      );
-    }
-    return found;
-  }
-
-  if (!interactive) {
-    throw new Error(
-      `Missing required argument: market. Available: ${AAVE_MARKETS.map((m) => m.name).join(", ")}`
-    );
-  }
-
-  const { market } = await prompts({
-    type: "select",
-    name: "market",
-    message: "Select an Aave market",
-    choices: AAVE_MARKETS.map((m) => ({
-      title: `${m.name} (chain: ${m.chain.name})`,
-      value: m,
-    })),
-  });
-
-  if (!market) throw new Error("No market selected");
-  return market;
-};
-
-const resolveAsset = async (
-  market: AaveMarket,
-  assetSymbol?: string,
-  interactive = true
-): Promise<string> => {
-  const symbols = Object.keys(market.market.ASSETS);
-
-  if (assetSymbol) {
-    if (!symbols.includes(assetSymbol)) {
-      throw new Error(
-        `Unknown asset "${assetSymbol}" in ${market.name}. Available: ${symbols.join(", ")}`
-      );
-    }
-    return assetSymbol;
-  }
-
-  if (!interactive) {
-    throw new Error(
-      `Missing required argument: asset. Available in ${market.name}: ${symbols.join(", ")}`
-    );
-  }
-
-  const { asset } = await prompts({
-    type: "select",
-    name: "asset",
-    message: "Select an asset",
-    choices: symbols.map((s) => ({ title: s, value: s })),
-  });
-
-  if (!asset) throw new Error("No asset selected");
-  return asset;
-};
-
 const resolveTokenType = async (
   tokenType?: string,
-  interactive = true
+  interactive = true,
 ): Promise<TokenType> => {
   if (tokenType) {
     if (tokenType !== "supply" && tokenType !== "borrow") {
@@ -87,7 +20,9 @@ const resolveTokenType = async (
   }
 
   if (!interactive) {
-    throw new Error(`Missing required argument: tokenType. Must be "supply" or "borrow"`);
+    throw new Error(
+      `Missing required argument: tokenType. Must be "supply" or "borrow"`,
+    );
   }
 
   const { type } = await prompts({
@@ -113,7 +48,12 @@ export const exploreAaveUsersAction = async (
     top,
     progressBar,
     interactive = true,
-  }: { blockNumber?: string; top?: string; progressBar?: boolean; interactive?: boolean }
+  }: {
+    blockNumber?: string;
+    top?: string;
+    progressBar?: boolean;
+    interactive?: boolean;
+  },
 ) => {
   const market = await resolveMarket(marketArg, interactive);
   const assetSymbol = await resolveAsset(market, assetArg, interactive);
@@ -122,7 +62,7 @@ export const exploreAaveUsersAction = async (
   const rpcUrl = process.env[market.rpcEnvVar];
   if (!rpcUrl) {
     throw new Error(
-      `Missing RPC URL for ${market.name}. Set the ${market.rpcEnvVar} environment variable in your .env file.`
+      `Missing RPC URL for ${market.name}. Set the ${market.rpcEnvVar} environment variable in your .env file.`,
     );
   }
 
@@ -147,7 +87,7 @@ export const exploreAaveUsersAction = async (
   };
 
   console.log(
-    `\nFetching ${tokenType === "supply" ? "suppliers" : "borrowers"} for ${colors.green(assetSymbol)} on ${colors.green(market.name)} at block ${endBlock}...\n`
+    `\nFetching ${tokenType === "supply" ? "suppliers" : "borrowers"} for ${colors.green(assetSymbol)} on ${colors.green(market.name)} at block ${endBlock}...\n`,
   );
 
   const holders = await getTokenHolders(token, endBlock, {
@@ -181,4 +121,11 @@ export const exploreAaveUsersAction = async (
   });
 
   console.log(table.toString());
+
+  if (tokenType === "borrow") {
+    console.log(
+      `\nTip: trace where a borrower sent their ${colors.green(assetSymbol)} using:\n` +
+        `  ${colors.cyan(`bun run trace-borrower-outflows ${market.name} ${assetSymbol} <address>`)}\n`,
+    );
+  }
 };

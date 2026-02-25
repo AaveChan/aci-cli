@@ -96,7 +96,7 @@ describe("test holders", () => {
     ]);
 
     expect(JSON.stringify(Object.fromEntries(holders), replacer)).toBe(
-      JSON.stringify(Object.fromEntries(holdersExcepted), replacer)
+      JSON.stringify(Object.fromEntries(holdersExcepted), replacer),
     );
   });
 

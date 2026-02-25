@@ -38,6 +38,7 @@ import { Chain } from "viem";
 
 export type AaveAsset = {
   decimals: number;
+  UNDERLYING: string;
   A_TOKEN: string;
   V_TOKEN: string;
   [key: string]: unknown;

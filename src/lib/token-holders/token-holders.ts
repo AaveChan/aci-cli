@@ -50,7 +50,7 @@ export const fetchEvents = async (
     batchSize: 10n,
     waitBetweenBatches: 0,
   },
-  client: PublicClient = publicClient
+  client: PublicClient = publicClient,
 ) => {
   const step = batchSize * fetchSize;
 
@@ -66,7 +66,7 @@ export const fetchEvents = async (
           (Number(endBlock) - Number(startBlock)),
         {
           nextTask: "Get token events",
-        }
+        },
       );
     }
     for (
@@ -86,7 +86,7 @@ export const fetchEvents = async (
           eventName: "Transfer",
           fromBlock: fromBlock,
           toBlock: toBlock,
-        })
+        }),
       );
 
       eventsPromise.push(currentEventsPromise);
@@ -115,16 +115,73 @@ export const fetchEvents = async (
   return parsedEvents;
 };
 
+export const fetchAddressOutflows = async (
+  tokenAddress: Address,
+  fromAddress: Address,
+  startBlock: bigint,
+  endBlock: bigint,
+  displayProgressBar = false,
+  client: PublicClient = publicClient,
+): Promise<TransferEvent[]> => {
+  const step = 10n * 10000n; // same defaults as fetchEvents
+
+  const events = [];
+  for (let chunk = startBlock; chunk <= endBlock; chunk += step) {
+    if (displayProgressBar) {
+      progressBar.update(
+        ((Number(chunk) - Number(startBlock)) * 20) /
+          (Number(endBlock) - Number(startBlock)),
+        { nextTask: "Get outflow events" },
+      );
+    }
+
+    const eventsPromise = [];
+    for (
+      let fromBlock = chunk;
+      fromBlock + 10000n <= chunk + step && fromBlock <= endBlock;
+      fromBlock += 10000n
+    ) {
+      let toBlock = fromBlock + 10000n - 1n;
+      if (toBlock > endBlock) toBlock = endBlock;
+
+      eventsPromise.push(
+        retryRequest(
+          client.getContractEvents({
+            address: tokenAddress,
+            abi: erc20Abi,
+            eventName: "Transfer",
+            args: { from: fromAddress },
+            fromBlock,
+            toBlock,
+          }),
+        ),
+      );
+    }
+
+    const eventsChunk = await Promise.all(eventsPromise);
+    for (const chunk of eventsChunk) events.push(...chunk);
+  }
+
+  return events
+    .map((event) => ({
+      from: event.args.from,
+      to: event.args.to,
+      value: event.args.value,
+      blockNumber: event.blockNumber,
+    }))
+    .filter((e) => e !== null) as TransferEvent[];
+};
+
 export const getEvents = async (
   token: Token,
   network: Chain,
   endBlock: bigint,
   displayProgressBar = false,
-  client: PublicClient = publicClient
+  client: PublicClient = publicClient,
 ): Promise<GetTransferEvents> => {
   if (endBlock < token.deploymentBlock) {
     throw new Error(
-      `The endBlock asked is before the deployment of the contract ${token.name} (deployment: ${token.deploymentBlock})`
+      `The endBlock asked is before the deployment of the contract ${token.name} (deployment: ${token.deploymentBlock})`,
     );
   }
 
@@ -136,7 +193,7 @@ export const getEvents = async (
     events = cache.events;
     if (endBlock <= cache.maxBlock) {
       console.log(
-        `[cache] Cache hit for ${token.name} on ${networkName} (cached up to block ${cache.maxBlock}, requested ${endBlock}). No RPC fetch needed.`
+        `[cache] Cache hit for ${token.name} on ${networkName} (cached up to block ${cache.maxBlock}, requested ${endBlock}). No RPC fetch needed.`,
       );
     }
   }
@@ -149,11 +206,11 @@ export const getEvents = async (
 
     if (!cache) {
       console.log(
-        `[cache] No cache found for ${token.name} on ${networkName}. Fetching from block ${startBlock} to ${endBlock}...`
+        `[cache] No cache found for ${token.name} on ${networkName}. Fetching from block ${startBlock} to ${endBlock}...`,
       );
     } else {
       console.log(
-        `[cache] Partial cache hit for ${token.name} on ${networkName} (cached up to block ${cache.maxBlock}). Fetching delta from ${startBlock} to ${endBlock}...`
+        `[cache] Partial cache hit for ${token.name} on ${networkName} (cached up to block ${cache.maxBlock}). Fetching delta from ${startBlock} to ${endBlock}...`,
       );
     }
 
@@ -163,7 +220,7 @@ export const getEvents = async (
       endBlock,
       displayProgressBar,
       undefined,
-      client
+      client,
     );
 
     events = [...events, ...newEvents];
@@ -185,7 +242,7 @@ export const computeHistory = (transferEvents: TransferEvent[]) => {
   const addToHolderHistory = (
     event: TransferEvent,
     holder: Address,
-    history: TransferEvent[] | undefined
+    history: TransferEvent[] | undefined,
   ) => {
     const eventWithoutAddress = {
       from: event.from,
@@ -236,7 +293,7 @@ export const computeHoldersBalances = (holders: HoldersEvents) => {
         balance -= BigInt(event.value);
       } else {
         throw new Error(
-          `The event ${event} is not related to the holder ${address}`
+          `The event ${event} is not related to the holder ${address}`,
         );
       }
     }
@@ -249,7 +306,7 @@ export const computeHoldersBalances = (holders: HoldersEvents) => {
 
 const filterHolders = (
   holdersBalances: HoldersBalances,
-  minTokenAmount: bigint
+  minTokenAmount: bigint,
 ) => {
   const newHoldersBalances = new Map<Address, bigint>();
 
@@ -282,7 +339,7 @@ export const getTokenHolders = async (
     network: mainnet,
     displayProgressBar: false,
     client: publicClient,
-  }
+  },
 ) => {
   if (displayProgressBar)
     progressBar.start(100, 0, { nextTask: "Get token events" });
@@ -292,7 +349,7 @@ export const getTokenHolders = async (
     network,
     endBlock,
     displayProgressBar,
-    client
+    client,
   );
   if (!transferEvents) {
     throw new Error("Error loading cache");
