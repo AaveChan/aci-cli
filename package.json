@@ -5,7 +5,8 @@
   "scripts": {
     "test": "jest --coverage",
     "get-balance": "ts-node -r tsconfig-paths/register ./src/cli/cli.ts get-balance",
-    "get-token-holders": "ts-node -r tsconfig-paths/register ./src/cli/cli.ts get-token-holders"
+    "get-token-holders": "ts-node -r tsconfig-paths/register ./src/cli/cli.ts get-token-holders",
+    "explore-aave-users": "ts-node -r tsconfig-paths/register ./src/cli/cli.ts explore-aave-users"
   },
   "keywords": [],
   "author": "",
@@ -13,6 +14,7 @@
   "devDependencies": {
     "@types/cli-progress": "^3.11.5",
     "@types/jest": "^29.5.12",
+    "@types/prompts": "^2.4.9",
     "@typescript-eslint/eslint-plugin": "^7.0.1",
     "@typescript-eslint/parser": "^7.0.1",
     "eslint": "^8.56.0",
@@ -24,10 +26,13 @@
     "typescript": "^5.3.3"
   },
   "dependencies": {
+    "@aave-dao/aave-address-book": "^4.46.4",
     "cli-progress": "^3.12.0",
     "cli-table3": "^0.6.4",
     "colors": "^1.4.0",
     "commander": "^12.0.0",
+    "dotenv": "^17.3.1",
+    "prompts": "^2.4.2",
     "viem": "^2.7.10"
   }
 }

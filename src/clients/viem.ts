@@ -1,18 +1,20 @@
-import { Address, createPublicClient, http } from "viem";
+import { Chain, createPublicClient, http } from "viem";
 import { createWalletClient } from "viem";
-import { privateKeyToAccount } from "viem/accounts";
 
 import { mainnet } from "viem/chains";
 
 export const publicClient = createPublicClient({
   chain: mainnet,
-  transport: http(process.env.RPC_URL_ETH),
+  transport: http(process.env.RPC_MAINNET),
 });
 
 export const walletClient = createWalletClient({
   chain: mainnet,
-  transport: http(process.env.RPC_URL_ETH),
+  transport: http(process.env.RPC_MAINNET),
 });
-export const account = privateKeyToAccount(
-  process.env.WALLET_PRIVATE_KEY as Address
-);
+
+export const createPublicClientForChain = (chain: Chain, rpcUrl?: string) =>
+  createPublicClient({
+    chain,
+    transport: http(rpcUrl),
+  });

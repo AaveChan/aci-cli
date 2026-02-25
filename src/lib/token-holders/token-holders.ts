@@ -1,4 +1,4 @@
-import { Address, Chain, erc20Abi, zeroAddress } from "viem";
+import { Address, Chain, erc20Abi, PublicClient, zeroAddress } from "viem";
 import {
   loadERC20TransferEventsFromLocalCache,
   saveDataToJSON,
@@ -49,7 +49,8 @@ export const fetchEvents = async (
     fetchSize: 10000n,
     batchSize: 10n,
     waitBetweenBatches: 0,
-  }
+  },
+  client: PublicClient = publicClient
 ) => {
   const step = batchSize * fetchSize;
 
@@ -79,7 +80,7 @@ export const fetchEvents = async (
       }
 
       const currentEventsPromise = retryRequest(
-        publicClient.getContractEvents({
+        client.getContractEvents({
           address: assetAddress,
           abi: erc20Abi,
           eventName: "Transfer",
@@ -118,7 +119,8 @@ export const getEvents = async (
   token: Token,
   network: Chain,
   endBlock: bigint,
-  displayProgressBar = false
+  displayProgressBar = false,
+  client: PublicClient = publicClient
 ): Promise<GetTransferEvents> => {
   if (endBlock < token.deploymentBlock) {
     throw new Error(
@@ -127,13 +129,16 @@ export const getEvents = async (
   }
 
   let events: TransferEvent[] = [];
-  const cache = loadERC20TransferEventsFromLocalCache(
-    mainnet.name.toLowerCase(),
-    token.name
-  );
+  const networkName = network.name.toLowerCase();
+  const cache = loadERC20TransferEventsFromLocalCache(networkName, token.name);
 
   if (cache) {
     events = cache.events;
+    if (endBlock <= cache.maxBlock) {
+      console.log(
+        `[cache] Cache hit for ${token.name} on ${networkName} (cached up to block ${cache.maxBlock}, requested ${endBlock}). No RPC fetch needed.`
+      );
+    }
   }
 
   if (!cache || endBlock > cache.maxBlock) {
@@ -142,17 +147,29 @@ export const getEvents = async (
         ? cache.maxBlock
         : token.deploymentBlock;
 
+    if (!cache) {
+      console.log(
+        `[cache] No cache found for ${token.name} on ${networkName}. Fetching from block ${startBlock} to ${endBlock}...`
+      );
+    } else {
+      console.log(
+        `[cache] Partial cache hit for ${token.name} on ${networkName} (cached up to block ${cache.maxBlock}). Fetching delta from ${startBlock} to ${endBlock}...`
+      );
+    }
+
     const newEvents = await fetchEvents(
       token.address,
       startBlock,
       endBlock,
-      displayProgressBar
+      displayProgressBar,
+      undefined,
+      client
     );
 
     events = [...events, ...newEvents];
   }
 
-  const dirPath = `./cache/erc-20/${network.name}/${token.name}/transfers`;
+  const dirPath = `./cache/erc-20/${networkName}/${token.name}/transfers`;
   const fileName = endBlock.toString();
   saveDataToJSON(events, dirPath, fileName, false);
 
@@ -254,14 +271,17 @@ export const getTokenHolders = async (
     minTokenAmount = 0n,
     network = mainnet,
     displayProgressBar = false,
+    client = publicClient,
   }: {
     minTokenAmount?: bigint;
     network?: Chain;
     displayProgressBar?: boolean;
+    client?: PublicClient;
   } = {
     minTokenAmount: 0n,
     network: mainnet,
     displayProgressBar: false,
+    client: publicClient,
   }
 ) => {
   if (displayProgressBar)
@@ -271,7 +291,8 @@ export const getTokenHolders = async (
     token,
     network,
     endBlock,
-    displayProgressBar
+    displayProgressBar,
+    client
   );
   if (!transferEvents) {
     throw new Error("Error loading cache");

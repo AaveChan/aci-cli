@@ -32,7 +32,6 @@ cp .example.env .env
 
 # Then set your own env var in your freshly created .env file
 # RPC_URL_ETH => Etehreum RPC url
-# WALLET_PRIVATE_KEY => Private key of the wallet used to call the swapToVariable method
 ```
 
 # Commands
