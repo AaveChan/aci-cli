@@ -12,6 +12,8 @@ import { resolveMarket, resolveAsset } from "@/lib/aave/resolvers";
 
 const resolveAddress = async (
   holders: Map<Address, bigint>,
+  decimals: number,
+  assetSymbol: string,
   addressArg?: string,
   interactive = true,
 ): Promise<Address> => {
@@ -43,7 +45,7 @@ const resolveAddress = async (
       .slice(0, 50)
       .map(([addr, balance]) => ({
         title: addr,
-        description: `Borrowed: ${balance.toString()}`,
+        description: `Borrowed: ${formatUnits(balance, decimals)} ${assetSymbol}`,
         value: addr,
       })),
   });
@@ -110,6 +112,8 @@ export const traceBorrowerOutflowsAction = async (
   // Step 2: select address to trace
   const selectedAddress = await resolveAddress(
     borrowers,
+    assetConfig.decimals,
+    assetSymbol,
     addressArg,
     interactive,
   );
