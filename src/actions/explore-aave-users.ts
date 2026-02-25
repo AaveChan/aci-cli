@@ -6,6 +6,8 @@ import { createPublicClientForChain } from "@/clients/viem";
 import { Token, getTokenHolders } from "@/lib/token-holders/token-holders";
 import { resolveMarket, resolveAsset } from "@/lib/aave/resolvers";
 
+type TokenType = "supply" | "borrow";
+
 const resolveTokenType = async (
   tokenType?: string,
   interactive = true
