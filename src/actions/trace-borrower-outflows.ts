@@ -65,7 +65,8 @@ const shortAddr = (addr: Address) => addr;
 const fmtPosition = (
   prefix: string,
   { symbol, balance, decimals }: AavePosition,
-) => `${prefix}${symbol} ${colors.blue(`(${formatUnits(balance, decimals)})`)}`;
+) =>
+  `${prefix}${symbol} ${colors.blue(`(Current position: ${Math.floor(Number(formatUnits(balance, decimals)))})`)}`;
 
 const formatTags = (tag: AddressTag, maskAsset?: string): string => {
   if (tag.aTokenLabel) return `  [${colors.yellow(tag.aTokenLabel)}]`;
