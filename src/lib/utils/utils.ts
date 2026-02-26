@@ -1,3 +1,39 @@
+import colors from "colors";
+import { formatUnits } from "viem";
+import { AavePosition, AddressTag } from "@/lib/address-tags";
+
+export const formatPosition = (
+  prefix: string,
+  { symbol, balance, decimals }: AavePosition,
+) =>
+  `${prefix}${symbol} ${colors.blue(`(Current position: ${Math.floor(Number(formatUnits(balance, decimals)))})`)}`;
+
+export const formatTags = (tag: AddressTag, maskAsset?: string): string => {
+  if (tag.aTokenLabel) return `  [${colors.yellow(tag.aTokenLabel)}]`;
+  const parts: string[] = [];
+  if (tag.ens) parts.push(colors.cyan(`ENS: ${tag.ens}`));
+  const supplying = maskAsset
+    ? tag.aaveSupplying?.filter((p) => p.symbol === maskAsset)
+    : tag.aaveSupplying;
+  const borrowing = maskAsset
+    ? tag.aaveBorrowing?.filter((p) => p.symbol === maskAsset)
+    : tag.aaveBorrowing;
+  if (supplying?.length || borrowing?.length) {
+    const supply =
+      supplying?.map((p) => formatPosition("a", p)).join(", ") ?? "";
+    const borrow =
+      borrowing?.map((p) => formatPosition("v", p)).join(", ") ?? "";
+    const aaveStr =
+      supply && borrow
+        ? `${supply} | ${borrow}`
+        : supply
+          ? supply
+          : `| ${borrow}`;
+    parts.push(colors.yellow(`Aave: ${aaveStr}`));
+  } else if (tag.isContract) parts.push(colors.gray("Contract"));
+  return parts.length > 0 ? `  [${parts.join("] [")}]` : "";
+};
+
 export const retryRequest = async <T>(
   request: Promise<T>,
   iterations = 3,

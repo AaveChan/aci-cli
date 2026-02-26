@@ -86,6 +86,11 @@ traceBorrowerOutflowsCmd.option(
   false,
 );
 traceBorrowerOutflowsCmd.option(
+  "-m, --maskUnrelated",
+  "Hide Aave positions unrelated to the traced asset in address tags",
+  false,
+);
+traceBorrowerOutflowsCmd.option(
   "--no-interactive",
   "Disable interactive prompts — all arguments must be provided or the command fails",
 );
