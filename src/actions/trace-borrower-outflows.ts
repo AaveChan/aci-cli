@@ -102,7 +102,7 @@ const renderFlowTree = (
 
   const selfLabel = (addr: Address) =>
     addr.toLowerCase() === root.toLowerCase()
-      ? `  ${colors.red("[↩ self]")}`
+      ? `  ${colors.white("[↩ self]")}`
       : "";
 
   const rootTag = tagMap.get(root);
@@ -118,7 +118,7 @@ const renderFlowTree = (
     const cont1 = isLastL1 ? "    " : "│   ";
 
     console.log(
-      `${prefix1}${colors.green(shortAddr(addr))}  ${formatUnits(amount, decimals)} ${assetSymbol}  (${pct(amount)})${tag ? formatTags(tag) : ""}${selfLabel(addr)}`,
+      `${prefix1} ${selfLabel(addr)} ${colors.green(shortAddr(addr))}  ${formatUnits(amount, decimals)} ${assetSymbol}  (${pct(amount)})${tag ? formatTags(tag) : ""}`,
     );
 
     // aToken addresses are terminal — no sub-leaves
@@ -134,7 +134,7 @@ const renderFlowTree = (
       const prefix2 = isLastL2 ? "└── " : "├── ";
 
       console.log(
-        `${cont1}${prefix2}${colors.green(shortAddr(subAddr))}  ${formatUnits(subAmount, decimals)} ${assetSymbol}  (${pct(subAmount)})${subTag ? formatTags(subTag) : ""}${selfLabel(subAddr)}`,
+        `${cont1}${prefix2} ${selfLabel(subAddr)} ${colors.green(shortAddr(subAddr))}  ${formatUnits(subAmount, decimals)} ${assetSymbol}  (${pct(subAmount)})${subTag ? formatTags(subTag) : ""}`,
       );
     }
 
