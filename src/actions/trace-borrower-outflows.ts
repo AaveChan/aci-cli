@@ -66,8 +66,8 @@ const formatTags = (tag: AddressTag): string => {
   const parts: string[] = [];
   if (tag.ens) parts.push(colors.cyan(`ENS: ${tag.ens}`));
   if (tag.aaveSupplying?.length || tag.aaveBorrowing?.length) {
-    const supply = tag.aaveSupplying?.join(", ") ?? "";
-    const borrow = tag.aaveBorrowing?.join(", ") ?? "";
+    const supply = tag.aaveSupplying?.map((s) => `a${s}`).join(", ") ?? "";
+    const borrow = tag.aaveBorrowing?.map((s) => `v${s}`).join(", ") ?? "";
     const aaveStr =
       supply && borrow
         ? `${supply} | ${borrow}`
