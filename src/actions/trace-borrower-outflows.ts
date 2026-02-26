@@ -65,9 +65,17 @@ const formatTags = (tag: AddressTag): string => {
   if (tag.aTokenLabel) return `  [${colors.yellow(tag.aTokenLabel)}]`;
   const parts: string[] = [];
   if (tag.ens) parts.push(colors.cyan(`ENS: ${tag.ens}`));
-  if (tag.aaveSupplying?.length)
-    parts.push(colors.yellow(`Aave: ${tag.aaveSupplying.join(", ")}`));
-  else if (tag.isContract) parts.push(colors.gray("Contract"));
+  if (tag.aaveSupplying?.length || tag.aaveBorrowing?.length) {
+    const supply = tag.aaveSupplying?.join(", ") ?? "";
+    const borrow = tag.aaveBorrowing?.join(", ") ?? "";
+    const aaveStr =
+      supply && borrow
+        ? `${supply} | ${borrow}`
+        : supply
+          ? supply
+          : `| ${borrow}`;
+    parts.push(colors.yellow(`Aave: ${aaveStr}`));
+  } else if (tag.isContract) parts.push(colors.gray("Contract"));
   return parts.length > 0 ? `  [${parts.join("] [")}]` : "";
 };
 

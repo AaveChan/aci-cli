@@ -5,6 +5,7 @@ export type AddressTag = {
   ens?: string;
   isContract: boolean;
   aaveSupplying?: string[]; // asset symbols where address holds aTokens
+  aaveBorrowing?: string[]; // asset symbols where address holds vTokens
   aTokenLabel?: string; // set when this address IS an aToken, e.g. "aUSDC (AaveV3Ethereum)"
 };
 
@@ -46,61 +47,83 @@ export const resolveAddressTag = async (
     return { isContract: true, aTokenLabel };
   }
 
-  const [bytecode, ensName, aaveSupplying] = await Promise.all([
+  const [bytecode, ensName, aavePositions] = await Promise.all([
     client.getBytecode({ address }).catch(() => undefined),
     mainnetClient
       ? mainnetClient.getEnsName({ address }).catch(() => null)
       : Promise.resolve(null),
-    getAaveSupplyingAssets(address, chain, client),
+    getAavePositions(address, chain, client),
   ]);
 
   return {
     isContract: !!(bytecode && bytecode !== "0x"),
     ens: ensName ?? undefined,
-    aaveSupplying: aaveSupplying.length > 0 ? aaveSupplying : undefined,
+    aaveSupplying:
+      aavePositions.supplying.length > 0 ? aavePositions.supplying : undefined,
+    aaveBorrowing:
+      aavePositions.borrowing.length > 0 ? aavePositions.borrowing : undefined,
   };
 };
 
 /**
- * Uses multicall to check all aToken balances on the given chain.
- * Returns deduplicated list of asset symbols where balance > 0.
+ * Uses a single multicall to check all aToken and vToken balances on the chain.
+ * Returns deduplicated lists of asset symbols with balance > 0 for each.
  */
-const getAaveSupplyingAssets = async (
+const getAavePositions = async (
   address: Address,
   chain: Chain,
   client: PublicClient,
-): Promise<string[]> => {
+): Promise<{ supplying: string[]; borrowing: string[] }> => {
   const marketsOnChain = AAVE_MARKETS.filter((m) => m.chain.id === chain.id);
 
-  const checks: { symbol: string; aToken: Address }[] = [];
+  const checks: { symbol: string; aToken: Address; vToken: Address }[] = [];
   for (const market of marketsOnChain) {
     for (const [symbol, asset] of Object.entries(market.market.ASSETS)) {
-      checks.push({ symbol, aToken: asset.A_TOKEN as Address });
+      checks.push({
+        symbol,
+        aToken: asset.A_TOKEN as Address,
+        vToken: asset.V_TOKEN as Address,
+      });
     }
   }
 
-  if (checks.length === 0) return [];
+  if (checks.length === 0) return { supplying: [], borrowing: [] };
 
+  // Interleave: [aToken0, vToken0, aToken1, vToken1, ...]
   const results = await client
     .multicall({
-      contracts: checks.map(({ aToken }) => ({
-        address: aToken,
-        abi: erc20Abi,
-        functionName: "balanceOf" as const,
-        args: [address] as readonly [Address],
-      })),
+      contracts: checks.flatMap(({ aToken, vToken }) => [
+        {
+          address: aToken,
+          abi: erc20Abi,
+          functionName: "balanceOf" as const,
+          args: [address] as readonly [Address],
+        },
+        {
+          address: vToken,
+          abi: erc20Abi,
+          functionName: "balanceOf" as const,
+          args: [address] as readonly [Address],
+        },
+      ]),
       allowFailure: true,
     })
     .catch(() => [] as { status: string; result?: unknown }[]);
 
   const supplying: string[] = [];
-  for (let i = 0; i < results.length; i++) {
-    const r = results[i];
-    if (r.status === "success" && (r.result as bigint) > 0n) {
+  const borrowing: string[] = [];
+  for (let i = 0; i < checks.length; i++) {
+    const aResult = results[i * 2];
+    const vResult = results[i * 2 + 1];
+    if (aResult?.status === "success" && (aResult.result as bigint) > 0n)
       supplying.push(checks[i].symbol);
-    }
+    if (vResult?.status === "success" && (vResult.result as bigint) > 0n)
+      borrowing.push(checks[i].symbol);
   }
 
   // Deduplicate: same symbol may appear across V2/V3 markets
-  return [...new Set(supplying)];
+  return {
+    supplying: [...new Set(supplying)],
+    borrowing: [...new Set(borrowing)],
+  };
 };
