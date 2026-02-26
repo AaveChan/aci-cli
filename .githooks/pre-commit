@@ -2,7 +2,8 @@
 set -e
 
 echo "[pre-commit] Running prettier..."
-npx prettier --check 'src/**/*.ts'
+npx prettier --write 'src/**/*.ts'
+git add -u 'src/**/*.ts'
 
 echo "[pre-commit] Running eslint..."
 npx eslint 'src/**/*.ts'
