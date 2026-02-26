@@ -55,7 +55,7 @@ const resolveAddress = async (
   return address;
 };
 
-const shortAddr = (addr: Address) => `${addr.slice(0, 8)}...${addr.slice(-6)}`;
+const shortAddr = (addr: Address) => addr;
 
 const formatTags = (tag: AddressTag): string => {
   const parts: string[] = [];
