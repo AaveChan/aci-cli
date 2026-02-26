@@ -11,7 +11,8 @@
     "get-balance": "ts-node -r tsconfig-paths/register ./src/cli/cli.ts get-balance",
     "get-token-holders": "ts-node -r tsconfig-paths/register ./src/cli/cli.ts get-token-holders",
     "explore-aave-users": "ts-node -r tsconfig-paths/register ./src/cli/cli.ts explore-aave-users",
-    "trace-borrower-outflows": "ts-node -r tsconfig-paths/register ./src/cli/cli.ts trace-borrower-outflows"
+    "trace-borrower-outflows": "ts-node -r tsconfig-paths/register ./src/cli/cli.ts trace-borrower-outflows",
+    "trace-all-borrowers": "ts-node -r tsconfig-paths/register ./src/cli/cli.ts trace-all-borrowers"
   },
   "keywords": [],
   "author": "",
