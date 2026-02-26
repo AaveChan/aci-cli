@@ -2,7 +2,7 @@ import colors from "colors";
 import { formatUnits } from "viem";
 import { AavePosition, AddressTag } from "@/lib/address-tags";
 
-export const fmtPosition = (
+export const formatPosition = (
   prefix: string,
   { symbol, balance, decimals }: AavePosition,
 ) =>
@@ -19,8 +19,10 @@ export const formatTags = (tag: AddressTag, maskAsset?: string): string => {
     ? tag.aaveBorrowing?.filter((p) => p.symbol === maskAsset)
     : tag.aaveBorrowing;
   if (supplying?.length || borrowing?.length) {
-    const supply = supplying?.map((p) => fmtPosition("a", p)).join(", ") ?? "";
-    const borrow = borrowing?.map((p) => fmtPosition("v", p)).join(", ") ?? "";
+    const supply =
+      supplying?.map((p) => formatPosition("a", p)).join(", ") ?? "";
+    const borrow =
+      borrowing?.map((p) => formatPosition("v", p)).join(", ") ?? "";
     const aaveStr =
       supply && borrow
         ? `${supply} | ${borrow}`
