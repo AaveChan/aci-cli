@@ -5,13 +5,34 @@ export type AddressTag = {
   ens?: string;
   isContract: boolean;
   aaveSupplying?: string[]; // asset symbols where address holds aTokens
+  aTokenLabel?: string; // set when this address IS an aToken, e.g. "aUSDC (AaveV3Ethereum)"
+};
+
+/**
+ * Pure synchronous lookup — returns a label like "aUSDC (AaveV3Ethereum)" if
+ * the given address is a known Aave aToken contract on the chain, or undefined.
+ * No RPC call needed.
+ */
+export const getATokenLabel = (
+  address: Address,
+  chain: Chain,
+): string | undefined => {
+  const normalized = address.toLowerCase();
+  for (const market of AAVE_MARKETS) {
+    if (market.chain.id !== chain.id) continue;
+    for (const [symbol, asset] of Object.entries(market.market.ASSETS)) {
+      if (asset.A_TOKEN.toLowerCase() === normalized) {
+        return `a${symbol} (${market.name})`;
+      }
+    }
+  }
+  return undefined;
 };
 
 /**
  * Resolves metadata tags for an address:
- * - ENS reverse name (requires a mainnet client)
- * - Whether the address is a smart contract
- * - Aave aToken holdings on the given chain
+ * - If the address is a known Aave aToken, returns immediately with its label.
+ * - Otherwise: ENS reverse name, contract/EOA status, Aave aToken holdings.
  */
 export const resolveAddressTag = async (
   address: Address,
@@ -19,6 +40,12 @@ export const resolveAddressTag = async (
   client: PublicClient,
   mainnetClient?: PublicClient,
 ): Promise<AddressTag> => {
+  // Fast-path: known aToken address — no RPC needed
+  const aTokenLabel = getATokenLabel(address, chain);
+  if (aTokenLabel) {
+    return { isContract: true, aTokenLabel };
+  }
+
   const [bytecode, ensName, aaveSupplying] = await Promise.all([
     client.getBytecode({ address }).catch(() => undefined),
     mainnetClient

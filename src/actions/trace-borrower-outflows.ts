@@ -9,7 +9,11 @@ import {
   fetchAddressOutflows,
 } from "@/lib/token-holders/token-holders";
 import { resolveMarket, resolveAsset } from "@/lib/aave/resolvers";
-import { resolveAddressTag, AddressTag } from "@/lib/address-tags";
+import {
+  resolveAddressTag,
+  AddressTag,
+  getATokenLabel,
+} from "@/lib/address-tags";
 
 const resolveAddress = async (
   holders: Map<Address, bigint>,
@@ -58,6 +62,7 @@ const resolveAddress = async (
 const shortAddr = (addr: Address) => addr;
 
 const formatTags = (tag: AddressTag): string => {
+  if (tag.aTokenLabel) return `  [${colors.yellow(tag.aTokenLabel)}]`;
   const parts: string[] = [];
   if (tag.ens) parts.push(colors.cyan(`ENS: ${tag.ens}`));
   if (tag.aaveSupplying?.length)
@@ -97,6 +102,9 @@ const renderFlowTree = (
     console.log(
       `${prefix1}${colors.green(shortAddr(addr))}  ${formatUnits(amount, decimals)} ${assetSymbol}  (${pct(amount)})${tag ? formatTags(tag) : ""}`,
     );
+
+    // aToken addresses are terminal — no sub-leaves
+    if (tag?.aTokenLabel) continue;
 
     const children = level2.get(addr) ?? [];
     const childPruned = pruned2.get(addr) ?? 0;
@@ -229,16 +237,20 @@ export const traceBorrowerOutflowsAction = async (
   const level1 = allSorted.slice(0, topN).filter(([, v]) => v >= threshold);
   const pruned1 = allSorted.filter(([, v]) => v < threshold).length;
 
-  // Step 5: fetch level-2 outflows for each level-1 recipient in parallel
+  // Step 5: fetch level-2 outflows — skip aToken recipients (they are terminal)
+  const nonATokenLevel1 = level1.filter(
+    ([addr]) => getATokenLabel(addr, market.chain) === undefined,
+  );
+
   console.log(
-    `\nFetching depth-2 outflows for ${level1.length} recipients...\n`,
+    `\nFetching depth-2 outflows for ${nonATokenLevel1.length} recipients...\n`,
   );
 
   const level2: Map<Address, [Address, bigint][]> = new Map();
   const pruned2: Map<Address, number> = new Map();
 
   await Promise.all(
-    level1.map(async ([recipient]) => {
+    nonATokenLevel1.map(async ([recipient]) => {
       const subOutflows = await fetchAddressOutflows(
         underlyingAddress,
         recipient,
