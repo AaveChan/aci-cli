@@ -9,10 +9,36 @@ import { traceBorrowerOutflowsAction } from "@/actions/trace-borrower-outflows";
 import { traceAllBorrowersAction } from "@/actions/trace-all-borrowers";
 import { Command } from "commander";
 
+// ── Reusable option helpers ────────────────────────────────────────────────
+const withNoInteractive = (cmd: Command) =>
+  cmd.option(
+    "--no-interactive",
+    "Disable interactive prompts — all arguments must be provided or the command fails",
+  );
+
+const withBlockNumber = (
+  cmd: Command,
+  description = "The block number snapshot to use",
+) => cmd.option("-b, --blockNumber [block_number]", description);
+
+const withTop = (cmd: Command, description: string) =>
+  cmd.option("-n, --top <number>", description, "10");
+
+const withProgressBar = (cmd: Command, description: string) =>
+  cmd.option("-p, --progressBar", description, false);
+
+const withMaskUnrelated = (cmd: Command) =>
+  cmd.option(
+    "-m, --maskUnrelated",
+    "Hide Aave positions unrelated to the traced asset in address tags",
+    false,
+  );
+
+// ── Commands ───────────────────────────────────────────────────────────────
 const getBalanceCmd = new Command("get-balance");
 getBalanceCmd.arguments("address");
-getBalanceCmd.option(
-  "-b, --blockNumber [block_number]",
+withBlockNumber(
+  getBalanceCmd,
   "The block number from which to get the balance",
 );
 getBalanceCmd.action(getBalanceAction);
@@ -21,14 +47,13 @@ const getTokenHoldersCmd = new Command("get-token-holders");
 getTokenHoldersCmd.arguments("tokenAddress");
 getTokenHoldersCmd.arguments("tokenName");
 getTokenHoldersCmd.arguments("tokenDeploymentBlock");
-getTokenHoldersCmd.option(
-  "-b, --blockNumber [block_number]",
+withBlockNumber(
+  getTokenHoldersCmd,
   "The block number from which to get the balance",
 );
-getTokenHoldersCmd.option(
-  "-p, --progressBar",
+withProgressBar(
+  getTokenHoldersCmd,
   "Display a progress bar while fetching the token holders",
-  false,
 );
 getTokenHoldersCmd.action(getTokenHoldersAction);
 
@@ -42,24 +67,10 @@ exploreAaveUsersCmd.argument(
   "[tokenType]",
   `Position type: "${SupplyType}" or "${BorrowType}"`,
 );
-exploreAaveUsersCmd.option(
-  "-b, --blockNumber [block_number]",
-  "The block number snapshot to use",
-);
-exploreAaveUsersCmd.option(
-  "-n, --top <number>",
-  "Number of top holders to display",
-  "10",
-);
-exploreAaveUsersCmd.option(
-  "-p, --progressBar",
-  "Display a progress bar while fetching",
-  false,
-);
-exploreAaveUsersCmd.option(
-  "--no-interactive",
-  "Disable interactive prompts — all arguments must be provided or the command fails",
-);
+withBlockNumber(exploreAaveUsersCmd);
+withTop(exploreAaveUsersCmd, "Number of top holders to display");
+withProgressBar(exploreAaveUsersCmd, "Display a progress bar while fetching");
+withNoInteractive(exploreAaveUsersCmd);
 exploreAaveUsersCmd.action(exploreAaveUsersAction);
 
 const traceBorrowerOutflowsCmd = new Command("trace-borrower-outflows");
@@ -72,29 +83,14 @@ traceBorrowerOutflowsCmd.argument(
   "[address]",
   "Borrower address to trace outflows from",
 );
-traceBorrowerOutflowsCmd.option(
-  "-b, --blockNumber [block_number]",
-  "The block number snapshot to use",
-);
-traceBorrowerOutflowsCmd.option(
-  "-n, --top <number>",
-  "Number of top recipients to display",
-  "10",
-);
-traceBorrowerOutflowsCmd.option(
-  "-p, --progressBar",
+withBlockNumber(traceBorrowerOutflowsCmd);
+withTop(traceBorrowerOutflowsCmd, "Number of top recipients to display");
+withProgressBar(
+  traceBorrowerOutflowsCmd,
   "Display a progress bar while fetching borrowers",
-  false,
 );
-traceBorrowerOutflowsCmd.option(
-  "-m, --maskUnrelated",
-  "Hide Aave positions unrelated to the traced asset in address tags",
-  false,
-);
-traceBorrowerOutflowsCmd.option(
-  "--no-interactive",
-  "Disable interactive prompts — all arguments must be provided or the command fails",
-);
+withMaskUnrelated(traceBorrowerOutflowsCmd);
+withNoInteractive(traceBorrowerOutflowsCmd);
 traceBorrowerOutflowsCmd.action(traceBorrowerOutflowsAction);
 
 const traceAllBorrowersCmd = new Command("trace-all-borrowers");
@@ -103,29 +99,14 @@ traceAllBorrowersCmd.argument(
   "Aave market name (e.g. AaveV3Ethereum)",
 );
 traceAllBorrowersCmd.argument("[asset]", "Asset symbol (e.g. USDC)");
-traceAllBorrowersCmd.option(
-  "-b, --blockNumber [block_number]",
-  "The block number snapshot to use",
-);
-traceAllBorrowersCmd.option(
-  "-n, --top <number>",
-  "Number of top borrowers to trace",
-  "10",
-);
-traceAllBorrowersCmd.option(
-  "-p, --progressBar",
+withBlockNumber(traceAllBorrowersCmd);
+withTop(traceAllBorrowersCmd, "Number of top borrowers to trace");
+withProgressBar(
+  traceAllBorrowersCmd,
   "Display a progress bar while fetching borrowers",
-  false,
 );
-traceAllBorrowersCmd.option(
-  "-m, --maskUnrelated",
-  "Hide Aave positions unrelated to the traced asset in address tags",
-  false,
-);
-traceAllBorrowersCmd.option(
-  "--no-interactive",
-  "Disable interactive prompts — all arguments must be provided or the command fails",
-);
+withMaskUnrelated(traceAllBorrowersCmd);
+withNoInteractive(traceAllBorrowersCmd);
 traceAllBorrowersCmd.action(traceAllBorrowersAction);
 
 export const program = new Command();
