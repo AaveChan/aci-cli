@@ -1,6 +1,10 @@
 import { getBalanceAction } from "@/actions/get-balance";
 import { getTokenHoldersAction } from "@/actions/get-token-holders";
-import { exploreAaveUsersAction } from "@/actions/explore-aave-users";
+import {
+  exploreAaveUsersAction,
+  SupplyType,
+  BorrowType,
+} from "@/actions/explore-aave-users";
 import { traceBorrowerOutflowsAction } from "@/actions/trace-borrower-outflows";
 import { Command } from "commander";
 
@@ -35,7 +39,7 @@ exploreAaveUsersCmd.argument(
 exploreAaveUsersCmd.argument("[asset]", "Asset symbol (e.g. USDC)");
 exploreAaveUsersCmd.argument(
   "[tokenType]",
-  'Position type: "supply" or "borrow"',
+  `Position type: "${SupplyType}" or "${BorrowType}"`,
 );
 exploreAaveUsersCmd.option(
   "-b, --blockNumber [block_number]",
