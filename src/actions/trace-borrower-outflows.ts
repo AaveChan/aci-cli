@@ -79,12 +79,14 @@ const formatTags = (tag: AddressTag): string => {
   return parts.length > 0 ? `  [${parts.join("] [")}]` : "";
 };
 
+type PrunedSummary = { count: number; amount: bigint };
+
 const renderFlowTree = (
   root: Address,
   level1: [Address, bigint][],
-  pruned1: number,
+  pruned1: PrunedSummary,
   level2: Map<Address, [Address, bigint][]>,
-  pruned2: Map<Address, number>,
+  pruned2: Map<Address, PrunedSummary>,
   tagMap: Map<Address, AddressTag>,
   rootTotal: bigint,
   decimals: number,
@@ -95,13 +97,16 @@ const renderFlowTree = (
       ? `${((Number(amount) * 100) / Number(rootTotal)).toFixed(1)}%`
       : "0.0%";
 
+  const prunedLabel = ({ count, amount }: PrunedSummary) =>
+    `[${count} recipient${count > 1 ? "s" : ""} pruned (${pct(amount)})]`;
+
   const rootTag = tagMap.get(root);
   console.log(
     `\n${colors.cyan(shortAddr(root))}${rootTag ? formatTags(rootTag) : ""}  [total out: ${formatUnits(rootTotal, decimals)} ${assetSymbol}]`,
   );
 
   for (let i = 0; i < level1.length; i++) {
-    const isLastL1 = i === level1.length - 1 && pruned1 === 0;
+    const isLastL1 = i === level1.length - 1 && pruned1.count === 0;
     const [addr, amount] = level1[i];
     const tag = tagMap.get(addr);
     const prefix1 = isLastL1 ? "└── " : "├── ";
@@ -115,10 +120,10 @@ const renderFlowTree = (
     if (tag?.aTokenLabel) continue;
 
     const children = level2.get(addr) ?? [];
-    const childPruned = pruned2.get(addr) ?? 0;
+    const childPruned = pruned2.get(addr) ?? { count: 0, amount: 0n };
 
     for (let j = 0; j < children.length; j++) {
-      const isLastL2 = j === children.length - 1 && childPruned === 0;
+      const isLastL2 = j === children.length - 1 && childPruned.count === 0;
       const [subAddr, subAmount] = children[j];
       const subTag = tagMap.get(subAddr);
       const prefix2 = isLastL2 ? "└── " : "├── ";
@@ -128,17 +133,13 @@ const renderFlowTree = (
       );
     }
 
-    if (childPruned > 0) {
-      console.log(
-        `${cont1}└── ${colors.gray(`[${childPruned} recipient${childPruned > 1 ? "s" : ""} < 10% pruned]`)}`,
-      );
+    if (childPruned.count > 0) {
+      console.log(`${cont1}└── ${colors.gray(prunedLabel(childPruned))}`);
     }
   }
 
-  if (pruned1 > 0) {
-    console.log(
-      `└── ${colors.gray(`[${pruned1} recipient${pruned1 > 1 ? "s" : ""} < 10% pruned]`)}`,
-    );
+  if (pruned1.count > 0) {
+    console.log(`└── ${colors.gray(prunedLabel(pruned1))}`);
   }
 };
 
@@ -243,7 +244,11 @@ export const traceBorrowerOutflowsAction = async (
     b > a ? 1 : b < a ? -1 : 0,
   );
   const level1 = allSorted.slice(0, topN).filter(([, v]) => v >= threshold);
-  const pruned1 = allSorted.filter(([, v]) => v < threshold).length;
+  const pruned1Items = allSorted.filter(([, v]) => v < threshold);
+  const pruned1 = {
+    count: pruned1Items.length,
+    amount: pruned1Items.reduce((s, [, v]) => s + v, 0n),
+  };
 
   // Step 5: fetch level-2 outflows — skip aToken recipients (they are terminal)
   const nonATokenLevel1 = level1.filter(
@@ -255,7 +260,7 @@ export const traceBorrowerOutflowsAction = async (
   );
 
   const level2: Map<Address, [Address, bigint][]> = new Map();
-  const pruned2: Map<Address, number> = new Map();
+  const pruned2: Map<Address, PrunedSummary> = new Map();
 
   await Promise.all(
     nonATokenLevel1.map(async ([recipient]) => {
@@ -282,10 +287,11 @@ export const traceBorrowerOutflowsAction = async (
         recipient,
         subAllSorted.slice(0, topN).filter(([, v]) => v >= threshold),
       );
-      pruned2.set(
-        recipient,
-        subAllSorted.filter(([, v]) => v < threshold).length,
-      );
+      const prunedSubItems = subAllSorted.filter(([, v]) => v < threshold);
+      pruned2.set(recipient, {
+        count: prunedSubItems.length,
+        amount: prunedSubItems.reduce((s, [, v]) => s + v, 0n),
+      });
     }),
   );
 
