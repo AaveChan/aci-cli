@@ -1,11 +1,17 @@
 import { Address, PublicClient, Chain, erc20Abi } from "viem";
 import { AAVE_MARKETS } from "@/lib/aave/markets";
 
+export type AavePosition = {
+  symbol: string;
+  balance: bigint;
+  decimals: number;
+};
+
 export type AddressTag = {
   ens?: string;
   isContract: boolean;
-  aaveSupplying?: string[]; // asset symbols where address holds aTokens
-  aaveBorrowing?: string[]; // asset symbols where address holds vTokens
+  aaveSupplying?: AavePosition[]; // aToken positions with current balance
+  aaveBorrowing?: AavePosition[]; // vToken positions with current balance
   aTokenLabel?: string; // set when this address IS an aToken, e.g. "aUSDC (AaveV3Ethereum)"
 };
 
@@ -67,22 +73,29 @@ export const resolveAddressTag = async (
 
 /**
  * Uses a single multicall to check all aToken and vToken balances on the chain.
- * Returns deduplicated lists of asset symbols with balance > 0 for each.
+ * Returns positions (symbol + balance + decimals) with balance > 0.
+ * Balances for the same symbol across V2/V3 markets are summed.
  */
 const getAavePositions = async (
   address: Address,
   chain: Chain,
   client: PublicClient,
-): Promise<{ supplying: string[]; borrowing: string[] }> => {
+): Promise<{ supplying: AavePosition[]; borrowing: AavePosition[] }> => {
   const marketsOnChain = AAVE_MARKETS.filter((m) => m.chain.id === chain.id);
 
-  const checks: { symbol: string; aToken: Address; vToken: Address }[] = [];
+  const checks: {
+    symbol: string;
+    aToken: Address;
+    vToken: Address;
+    decimals: number;
+  }[] = [];
   for (const market of marketsOnChain) {
     for (const [symbol, asset] of Object.entries(market.market.ASSETS)) {
       checks.push({
         symbol,
         aToken: asset.A_TOKEN as Address,
         vToken: asset.V_TOKEN as Address,
+        decimals: asset.decimals,
       });
     }
   }
@@ -110,20 +123,31 @@ const getAavePositions = async (
     })
     .catch(() => [] as { status: string; result?: unknown }[]);
 
-  const supplying: string[] = [];
-  const borrowing: string[] = [];
+  // Sum balances for same symbol across V2/V3 markets
+  const supplyMap = new Map<string, AavePosition>();
+  const borrowMap = new Map<string, AavePosition>();
+
+  const addTo = (
+    map: Map<string, AavePosition>,
+    { symbol, decimals }: { symbol: string; decimals: number },
+    balance: bigint,
+  ) => {
+    const existing = map.get(symbol);
+    if (existing) existing.balance += balance;
+    else map.set(symbol, { symbol, balance, decimals });
+  };
+
   for (let i = 0; i < checks.length; i++) {
     const aResult = results[i * 2];
     const vResult = results[i * 2 + 1];
     if (aResult?.status === "success" && (aResult.result as bigint) > 0n)
-      supplying.push(checks[i].symbol);
+      addTo(supplyMap, checks[i], aResult.result as bigint);
     if (vResult?.status === "success" && (vResult.result as bigint) > 0n)
-      borrowing.push(checks[i].symbol);
+      addTo(borrowMap, checks[i], vResult.result as bigint);
   }
 
-  // Deduplicate: same symbol may appear across V2/V3 markets
   return {
-    supplying: [...new Set(supplying)],
-    borrowing: [...new Set(borrowing)],
+    supplying: [...supplyMap.values()],
+    borrowing: [...borrowMap.values()],
   };
 };

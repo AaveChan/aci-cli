@@ -12,6 +12,7 @@ import { resolveMarket, resolveAsset } from "@/lib/aave/resolvers";
 import {
   resolveAddressTag,
   AddressTag,
+  AavePosition,
   getATokenLabel,
 } from "@/lib/address-tags";
 
@@ -61,19 +62,24 @@ const resolveAddress = async (
 
 const shortAddr = (addr: Address) => addr;
 
+const fmtPosition = (
+  prefix: string,
+  { symbol, balance, decimals }: AavePosition,
+) => `${prefix}${symbol} ${colors.blue(`(${formatUnits(balance, decimals)})`)}`;
+
 const formatTags = (tag: AddressTag, maskAsset?: string): string => {
   if (tag.aTokenLabel) return `  [${colors.yellow(tag.aTokenLabel)}]`;
   const parts: string[] = [];
   if (tag.ens) parts.push(colors.cyan(`ENS: ${tag.ens}`));
   const supplying = maskAsset
-    ? tag.aaveSupplying?.filter((s) => s === maskAsset)
+    ? tag.aaveSupplying?.filter((p) => p.symbol === maskAsset)
     : tag.aaveSupplying;
   const borrowing = maskAsset
-    ? tag.aaveBorrowing?.filter((s) => s === maskAsset)
+    ? tag.aaveBorrowing?.filter((p) => p.symbol === maskAsset)
     : tag.aaveBorrowing;
   if (supplying?.length || borrowing?.length) {
-    const supply = supplying?.map((s) => `a${s}`).join(", ") ?? "";
-    const borrow = borrowing?.map((s) => `v${s}`).join(", ") ?? "";
+    const supply = supplying?.map((p) => fmtPosition("a", p)).join(", ") ?? "";
+    const borrow = borrowing?.map((p) => fmtPosition("v", p)).join(", ") ?? "";
     const aaveStr =
       supply && borrow
         ? `${supply} | ${borrow}`
@@ -115,7 +121,7 @@ const renderFlowTree = (
 
   const rootTag = tagMap.get(root);
   console.log(
-    `\n${colors.cyan(shortAddr(root))}${rootTag ? formatTags(rootTag) : ""}  [total out: ${formatUnits(rootTotal, decimals)} ${assetSymbol}]`,
+    `\n${colors.cyan(shortAddr(root))}${rootTag ? formatTags(rootTag, maskAsset) : ""}  [total out: ${formatUnits(rootTotal, decimals)} ${assetSymbol}]`,
   );
 
   for (let i = 0; i < level1.length; i++) {
