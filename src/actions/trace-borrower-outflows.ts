@@ -61,13 +61,19 @@ const resolveAddress = async (
 
 const shortAddr = (addr: Address) => addr;
 
-const formatTags = (tag: AddressTag): string => {
+const formatTags = (tag: AddressTag, maskAsset?: string): string => {
   if (tag.aTokenLabel) return `  [${colors.yellow(tag.aTokenLabel)}]`;
   const parts: string[] = [];
   if (tag.ens) parts.push(colors.cyan(`ENS: ${tag.ens}`));
-  if (tag.aaveSupplying?.length || tag.aaveBorrowing?.length) {
-    const supply = tag.aaveSupplying?.map((s) => `a${s}`).join(", ") ?? "";
-    const borrow = tag.aaveBorrowing?.map((s) => `v${s}`).join(", ") ?? "";
+  const supplying = maskAsset
+    ? tag.aaveSupplying?.filter((s) => s === maskAsset)
+    : tag.aaveSupplying;
+  const borrowing = maskAsset
+    ? tag.aaveBorrowing?.filter((s) => s === maskAsset)
+    : tag.aaveBorrowing;
+  if (supplying?.length || borrowing?.length) {
+    const supply = supplying?.map((s) => `a${s}`).join(", ") ?? "";
+    const borrow = borrowing?.map((s) => `v${s}`).join(", ") ?? "";
     const aaveStr =
       supply && borrow
         ? `${supply} | ${borrow}`
@@ -91,7 +97,9 @@ const renderFlowTree = (
   rootTotal: bigint,
   decimals: number,
   assetSymbol: string,
+  maskUnrelated: boolean,
 ) => {
+  const maskAsset = maskUnrelated ? assetSymbol : undefined;
   const pct = (amount: bigint) =>
     rootTotal > 0n
       ? `${((Number(amount) * 100) / Number(rootTotal)).toFixed(1)}%`
@@ -118,7 +126,7 @@ const renderFlowTree = (
     const cont1 = isLastL1 ? "    " : "│   ";
 
     console.log(
-      `${prefix1} ${selfLabel(addr)} ${colors.green(shortAddr(addr))}  ${formatUnits(amount, decimals)} ${assetSymbol}  (${pct(amount)})${tag ? formatTags(tag) : ""}`,
+      `${prefix1} ${selfLabel(addr)} ${colors.green(shortAddr(addr))}  ${formatUnits(amount, decimals)} ${assetSymbol}  (${pct(amount)})${tag ? formatTags(tag, maskAsset) : ""}`,
     );
 
     // aToken addresses are terminal — no sub-leaves
@@ -134,7 +142,7 @@ const renderFlowTree = (
       const prefix2 = isLastL2 ? "└── " : "├── ";
 
       console.log(
-        `${cont1}${prefix2} ${selfLabel(subAddr)} ${colors.green(shortAddr(subAddr))}  ${formatUnits(subAmount, decimals)} ${assetSymbol}  (${pct(subAmount)})${subTag ? formatTags(subTag) : ""}`,
+        `${cont1}${prefix2} ${selfLabel(subAddr)} ${colors.green(shortAddr(subAddr))}  ${formatUnits(subAmount, decimals)} ${assetSymbol}  (${pct(subAmount)})${subTag ? formatTags(subTag, maskAsset) : ""}`,
       );
     }
 
@@ -156,11 +164,13 @@ export const traceBorrowerOutflowsAction = async (
     blockNumber,
     top,
     progressBar,
+    maskUnrelated = false,
     interactive = true,
   }: {
     blockNumber?: string;
     top?: string;
     progressBar?: boolean;
+    maskUnrelated?: boolean;
     interactive?: boolean;
   },
 ) => {
@@ -344,5 +354,6 @@ export const traceBorrowerOutflowsAction = async (
     rootTotal,
     decimals,
     assetSymbol,
+    maskUnrelated,
   );
 };
