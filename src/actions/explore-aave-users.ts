@@ -6,22 +6,24 @@ import { createPublicClientForChain } from "@/clients/viem";
 import { Token, getTokenHolders } from "@/lib/token-holders/token-holders";
 import { resolveMarket, resolveAsset } from "@/lib/aave/resolvers";
 
-type TokenType = "supply" | "borrow";
+export const SupplyType = "supply" as const;
+export const BorrowType = "borrow" as const;
+type TokenType = typeof SupplyType | typeof BorrowType;
 
 const resolveTokenType = async (
   tokenType?: string,
   interactive = true,
 ): Promise<TokenType> => {
   if (tokenType) {
-    if (tokenType !== "supply" && tokenType !== "borrow") {
-      throw new Error(`tokenType must be "supply" or "borrow"`);
+    if (tokenType !== SupplyType && tokenType !== BorrowType) {
+      throw new Error(`tokenType must be "${SupplyType}" or "${BorrowType}"`);
     }
     return tokenType;
   }
 
   if (!interactive) {
     throw new Error(
-      `Missing required argument: tokenType. Must be "supply" or "borrow"`,
+      `Missing required argument: tokenType. Must be "${SupplyType}" or "${BorrowType}"`,
     );
   }
 
@@ -30,8 +32,8 @@ const resolveTokenType = async (
     name: "type",
     message: "What do you want to explore?",
     choices: [
-      { title: "Supply (aToken holders)", value: "supply" },
-      { title: "Borrow (vToken holders)", value: "borrow" },
+      { title: "Supply (aToken holders)", value: SupplyType },
+      { title: "Borrow (vToken holders)", value: BorrowType },
     ],
   });
 
@@ -68,7 +70,7 @@ export const exploreAaveUsersAction = async (
 
   const assetConfig = market.market.ASSETS[assetSymbol];
   const tokenAddress =
-    tokenType === "supply" ? assetConfig.A_TOKEN : assetConfig.V_TOKEN;
+    tokenType === SupplyType ? assetConfig.A_TOKEN : assetConfig.V_TOKEN;
   const decimals = assetConfig.decimals;
 
   const client = createPublicClientForChain(market.chain, rpcUrl);
@@ -77,7 +79,7 @@ export const exploreAaveUsersAction = async (
     ? BigInt(blockNumber)
     : await client.getBlockNumber();
 
-  const label = tokenType === "supply" ? "aToken" : "vToken";
+  const label = tokenType === SupplyType ? "aToken" : "vToken";
   const tokenName = `${market.name}_${assetSymbol}_${label}`;
 
   const token: Token = {
@@ -87,7 +89,7 @@ export const exploreAaveUsersAction = async (
   };
 
   console.log(
-    `\nFetching ${tokenType === "supply" ? "suppliers" : "borrowers"} for ${colors.green(assetSymbol)} on ${colors.green(market.name)} at block ${endBlock}...\n`,
+    `\nFetching ${tokenType === SupplyType ? "suppliers" : "borrowers"} for ${colors.green(assetSymbol)} on ${colors.green(market.name)} at block ${endBlock}...\n`,
   );
 
   const holders = await getTokenHolders(token, endBlock, {
@@ -107,7 +109,7 @@ export const exploreAaveUsersAction = async (
     return;
   }
 
-  const positionLabel = tokenType === "supply" ? "Supplied" : "Borrowed";
+  const positionLabel = tokenType === SupplyType ? "Supplied" : "Borrowed";
   const table = new Table({
     head: [
       colors.green("Rank"),
@@ -122,7 +124,7 @@ export const exploreAaveUsersAction = async (
 
   console.log(table.toString());
 
-  if (tokenType === "borrow") {
+  if (tokenType === BorrowType) {
     console.log(
       `\nTip: trace where a borrower sent their ${colors.green(assetSymbol)} using:\n` +
         `  ${colors.cyan(`bun run trace-borrower-outflows ${market.name} ${assetSymbol} <address>`)}\n`,
