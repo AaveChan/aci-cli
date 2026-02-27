@@ -13,6 +13,8 @@ import {
   AaveV3EthereumLido,
   AaveV3Gnosis,
   AaveV3Linea,
+  AaveV3Mantle,
+  AaveV3MegaEth,
   AaveV3Metis,
   AaveV3Optimism,
   AaveV3Polygon,
@@ -30,11 +32,22 @@ import {
   bsc,
   celo,
   linea,
+  mantle,
   metis,
   scroll,
   zkSync,
 } from "viem/chains";
-import { Chain } from "viem";
+import { Chain, defineChain } from "viem";
+
+const megaEth = defineChain({
+  id: 4326,
+  name: "MegaETH",
+  nativeCurrency: { name: "Ether", symbol: "ETH", decimals: 18 },
+  rpcUrls: { default: { http: ["https://mainnet.megaeth.com/rpc"] } },
+  blockExplorers: {
+    default: { name: "Blockscout", url: "https://megaeth.blockscout.com" },
+  },
+});
 
 export type AaveAsset = {
   decimals: number;
@@ -204,5 +217,21 @@ export const AAVE_MARKETS: AaveMarket[] = [
     chain: celo,
     deploymentBlock: 24347428n,
     rpcEnvVar: "RPC_CELO",
+  },
+  // Mantle
+  {
+    name: "AaveV3Mantle",
+    market: AaveV3Mantle as unknown as AaveMarketConfig,
+    chain: mantle,
+    deploymentBlock: 90172818n,
+    rpcEnvVar: "RPC_MANTLE",
+  },
+  // MegaETH
+  {
+    name: "AaveV3MegaEth",
+    market: AaveV3MegaEth as unknown as AaveMarketConfig,
+    chain: megaEth,
+    deploymentBlock: 6657953n,
+    rpcEnvVar: "RPC_MEGAETH",
   },
 ];
