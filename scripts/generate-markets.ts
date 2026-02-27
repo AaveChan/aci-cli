@@ -68,8 +68,11 @@ loadEnv();
 type MarketSpec = {
   /** Name matching the @aave-dao/aave-address-book export */
   name: string;
-  /** POOL proxy address — used to binary-search the deployment block */
-  poolAddress: Address;
+  /**
+   * PoolAddressesProvider address — the first contract deployed for a market.
+   * Used to binary-search the true market deployment block.
+   */
+  poolAddressesProvider: Address;
   chain: Chain;
   /** Variable name to emit in the generated file (must be a viem/chains export) */
   chainVar: string;
@@ -78,41 +81,41 @@ type MarketSpec = {
 
 const MARKET_SPECS: MarketSpec[] = [
   // Ethereum
-  { name: "AaveV3Ethereum", poolAddress: getAddress(AaveV3Ethereum.POOL), chain: mainnet, chainVar: "mainnet", rpcEnvVar: "RPC_MAINNET" },
-  { name: "AaveV3EthereumLido", poolAddress: getAddress(AaveV3EthereumLido.POOL), chain: mainnet, chainVar: "mainnet", rpcEnvVar: "RPC_MAINNET" },
-  { name: "AaveV3EthereumEtherFi", poolAddress: getAddress(AaveV3EthereumEtherFi.POOL), chain: mainnet, chainVar: "mainnet", rpcEnvVar: "RPC_MAINNET" },
-  { name: "AaveV2Ethereum", poolAddress: getAddress(AaveV2Ethereum.POOL), chain: mainnet, chainVar: "mainnet", rpcEnvVar: "RPC_MAINNET" },
-  { name: "AaveV2EthereumAMM", poolAddress: getAddress(AaveV2EthereumAMM.POOL), chain: mainnet, chainVar: "mainnet", rpcEnvVar: "RPC_MAINNET" },
+  { name: "AaveV3Ethereum", poolAddressesProvider: getAddress(AaveV3Ethereum.POOL_ADDRESSES_PROVIDER), chain: mainnet, chainVar: "mainnet", rpcEnvVar: "RPC_MAINNET" },
+  { name: "AaveV3EthereumLido", poolAddressesProvider: getAddress(AaveV3EthereumLido.POOL_ADDRESSES_PROVIDER), chain: mainnet, chainVar: "mainnet", rpcEnvVar: "RPC_MAINNET" },
+  { name: "AaveV3EthereumEtherFi", poolAddressesProvider: getAddress(AaveV3EthereumEtherFi.POOL_ADDRESSES_PROVIDER), chain: mainnet, chainVar: "mainnet", rpcEnvVar: "RPC_MAINNET" },
+  { name: "AaveV2Ethereum", poolAddressesProvider: getAddress(AaveV2Ethereum.POOL_ADDRESSES_PROVIDER), chain: mainnet, chainVar: "mainnet", rpcEnvVar: "RPC_MAINNET" },
+  { name: "AaveV2EthereumAMM", poolAddressesProvider: getAddress(AaveV2EthereumAMM.POOL_ADDRESSES_PROVIDER), chain: mainnet, chainVar: "mainnet", rpcEnvVar: "RPC_MAINNET" },
   // Polygon
-  { name: "AaveV3Polygon", poolAddress: getAddress(AaveV3Polygon.POOL), chain: polygon, chainVar: "polygon", rpcEnvVar: "RPC_POLYGON" },
-  { name: "AaveV2Polygon", poolAddress: getAddress(AaveV2Polygon.POOL), chain: polygon, chainVar: "polygon", rpcEnvVar: "RPC_POLYGON" },
+  { name: "AaveV3Polygon", poolAddressesProvider: getAddress(AaveV3Polygon.POOL_ADDRESSES_PROVIDER), chain: polygon, chainVar: "polygon", rpcEnvVar: "RPC_POLYGON" },
+  { name: "AaveV2Polygon", poolAddressesProvider: getAddress(AaveV2Polygon.POOL_ADDRESSES_PROVIDER), chain: polygon, chainVar: "polygon", rpcEnvVar: "RPC_POLYGON" },
   // Arbitrum
-  { name: "AaveV3Arbitrum", poolAddress: getAddress(AaveV3Arbitrum.POOL), chain: arbitrum, chainVar: "arbitrum", rpcEnvVar: "RPC_ARBITRUM" },
+  { name: "AaveV3Arbitrum", poolAddressesProvider: getAddress(AaveV3Arbitrum.POOL_ADDRESSES_PROVIDER), chain: arbitrum, chainVar: "arbitrum", rpcEnvVar: "RPC_ARBITRUM" },
   // Optimism
-  { name: "AaveV3Optimism", poolAddress: getAddress(AaveV3Optimism.POOL), chain: optimism, chainVar: "optimism", rpcEnvVar: "RPC_OPTIMISM" },
+  { name: "AaveV3Optimism", poolAddressesProvider: getAddress(AaveV3Optimism.POOL_ADDRESSES_PROVIDER), chain: optimism, chainVar: "optimism", rpcEnvVar: "RPC_OPTIMISM" },
   // Avalanche
-  { name: "AaveV3Avalanche", poolAddress: getAddress(AaveV3Avalanche.POOL), chain: avalanche, chainVar: "avalanche", rpcEnvVar: "RPC_AVALANCHE" },
-  { name: "AaveV2Avalanche", poolAddress: getAddress(AaveV2Avalanche.POOL), chain: avalanche, chainVar: "avalanche", rpcEnvVar: "RPC_AVALANCHE" },
+  { name: "AaveV3Avalanche", poolAddressesProvider: getAddress(AaveV3Avalanche.POOL_ADDRESSES_PROVIDER), chain: avalanche, chainVar: "avalanche", rpcEnvVar: "RPC_AVALANCHE" },
+  { name: "AaveV2Avalanche", poolAddressesProvider: getAddress(AaveV2Avalanche.POOL_ADDRESSES_PROVIDER), chain: avalanche, chainVar: "avalanche", rpcEnvVar: "RPC_AVALANCHE" },
   // Base
-  { name: "AaveV3Base", poolAddress: getAddress(AaveV3Base.POOL), chain: base, chainVar: "base", rpcEnvVar: "RPC_BASE" },
+  { name: "AaveV3Base", poolAddressesProvider: getAddress(AaveV3Base.POOL_ADDRESSES_PROVIDER), chain: base, chainVar: "base", rpcEnvVar: "RPC_BASE" },
   // BNB
-  { name: "AaveV3BNB", poolAddress: getAddress(AaveV3BNB.POOL), chain: bsc, chainVar: "bsc", rpcEnvVar: "RPC_BNB" },
+  { name: "AaveV3BNB", poolAddressesProvider: getAddress(AaveV3BNB.POOL_ADDRESSES_PROVIDER), chain: bsc, chainVar: "bsc", rpcEnvVar: "RPC_BNB" },
   // Gnosis
-  { name: "AaveV3Gnosis", poolAddress: getAddress(AaveV3Gnosis.POOL), chain: gnosis, chainVar: "gnosis", rpcEnvVar: "RPC_GNOSIS" },
+  { name: "AaveV3Gnosis", poolAddressesProvider: getAddress(AaveV3Gnosis.POOL_ADDRESSES_PROVIDER), chain: gnosis, chainVar: "gnosis", rpcEnvVar: "RPC_GNOSIS" },
   // Scroll
-  { name: "AaveV3Scroll", poolAddress: getAddress(AaveV3Scroll.POOL), chain: scroll, chainVar: "scroll", rpcEnvVar: "RPC_SCROLL" },
+  { name: "AaveV3Scroll", poolAddressesProvider: getAddress(AaveV3Scroll.POOL_ADDRESSES_PROVIDER), chain: scroll, chainVar: "scroll", rpcEnvVar: "RPC_SCROLL" },
   // Metis
-  { name: "AaveV3Metis", poolAddress: getAddress(AaveV3Metis.POOL), chain: metis, chainVar: "metis", rpcEnvVar: "RPC_METIS" },
+  { name: "AaveV3Metis", poolAddressesProvider: getAddress(AaveV3Metis.POOL_ADDRESSES_PROVIDER), chain: metis, chainVar: "metis", rpcEnvVar: "RPC_METIS" },
   // Linea
-  { name: "AaveV3Linea", poolAddress: getAddress(AaveV3Linea.POOL), chain: linea, chainVar: "linea", rpcEnvVar: "RPC_LINEA" },
+  { name: "AaveV3Linea", poolAddressesProvider: getAddress(AaveV3Linea.POOL_ADDRESSES_PROVIDER), chain: linea, chainVar: "linea", rpcEnvVar: "RPC_LINEA" },
   // ZkSync
-  { name: "AaveV3ZkSync", poolAddress: getAddress(AaveV3ZkSync.POOL), chain: zkSync, chainVar: "zkSync", rpcEnvVar: "RPC_ZKSYNC" },
+  { name: "AaveV3ZkSync", poolAddressesProvider: getAddress(AaveV3ZkSync.POOL_ADDRESSES_PROVIDER), chain: zkSync, chainVar: "zkSync", rpcEnvVar: "RPC_ZKSYNC" },
   // Celo
-  { name: "AaveV3Celo", poolAddress: getAddress(AaveV3Celo.POOL), chain: celo, chainVar: "celo", rpcEnvVar: "RPC_CELO" },
+  { name: "AaveV3Celo", poolAddressesProvider: getAddress(AaveV3Celo.POOL_ADDRESSES_PROVIDER), chain: celo, chainVar: "celo", rpcEnvVar: "RPC_CELO" },
   // Mantle
-  { name: "AaveV3Mantle", poolAddress: getAddress(AaveV3Mantle.POOL), chain: mantle, chainVar: "mantle", rpcEnvVar: "RPC_MANTLE" },
+  { name: "AaveV3Mantle", poolAddressesProvider: getAddress(AaveV3Mantle.POOL_ADDRESSES_PROVIDER), chain: mantle, chainVar: "mantle", rpcEnvVar: "RPC_MANTLE" },
   // MegaETH
-  { name: "AaveV3MegaEth", poolAddress: getAddress(AaveV3MegaEth.POOL), chain: megaeth, chainVar: "megaeth", rpcEnvVar: "RPC_MEGAETH" },
+  { name: "AaveV3MegaEth", poolAddressesProvider: getAddress(AaveV3MegaEth.POOL_ADDRESSES_PROVIDER), chain: megaeth, chainVar: "megaeth", rpcEnvVar: "RPC_MEGAETH" },
 ];
 
 // ─── Deployment block binary search ──────────────────────────────────────────
@@ -234,8 +237,8 @@ async function main() {
   const results = await Promise.all(
     MARKET_SPECS.map(async (spec) => {
       const client = getClient(spec.rpcEnvVar);
-      process.stdout.write(`  ${spec.name} (${spec.poolAddress}) ...`);
-      const deploymentBlock = await findDeploymentBlock(spec.poolAddress, client);
+      process.stdout.write(`  ${spec.name} (${spec.poolAddressesProvider}) ...`);
+      const deploymentBlock = await findDeploymentBlock(spec.poolAddressesProvider, client);
       process.stdout.write(` block ${deploymentBlock}\n`);
       return { ...spec, deploymentBlock };
     }),
