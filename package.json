@@ -12,7 +12,8 @@
     "get-token-holders": "ts-node -r tsconfig-paths/register ./src/cli/cli.ts get-token-holders",
     "explore-aave-users": "ts-node -r tsconfig-paths/register ./src/cli/cli.ts explore-aave-users",
     "trace-borrower-outflows": "ts-node -r tsconfig-paths/register ./src/cli/cli.ts trace-borrower-outflows",
-    "trace-all-borrowers": "ts-node -r tsconfig-paths/register ./src/cli/cli.ts trace-all-borrowers"
+    "trace-all-borrowers": "ts-node -r tsconfig-paths/register ./src/cli/cli.ts trace-all-borrowers",
+    "generate-markets": "ts-node -r tsconfig-paths/register ./scripts/generate-markets.ts"
   },
   "keywords": [],
   "author": "",
