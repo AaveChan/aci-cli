@@ -11,7 +11,8 @@
     "get-balance": "ts-node -r tsconfig-paths/register ./src/cli/cli.ts get-balance",
     "get-token-holders": "ts-node -r tsconfig-paths/register ./src/cli/cli.ts get-token-holders",
     "explore-aave-users": "ts-node -r tsconfig-paths/register ./src/cli/cli.ts explore-aave-users",
-    "trace-borrower-outflows": "ts-node -r tsconfig-paths/register ./src/cli/cli.ts trace-borrower-outflows"
+    "trace-borrower-outflows": "ts-node -r tsconfig-paths/register ./src/cli/cli.ts trace-borrower-outflows",
+    "generate-markets": "ts-node -r tsconfig-paths/register ./scripts/generate-markets.ts"
   },
   "keywords": [],
   "author": "",
@@ -38,6 +39,6 @@
     "commander": "^12.0.0",
     "dotenv": "^17.3.1",
     "prompts": "^2.4.2",
-    "viem": "^2.7.10"
+    "viem": "^2.46.3"
   }
 }

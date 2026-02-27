@@ -198,10 +198,10 @@ export const getEvents = async (
     }
   }
 
-  if (!cache || endBlock > cache.maxBlock) {
+  if (!cache || endBlock >= cache.maxBlock) {
     const startBlock =
-      cache && endBlock > cache.maxBlock
-        ? cache.maxBlock
+      cache && endBlock >= cache.maxBlock
+        ? cache.maxBlock + 1n
         : token.deploymentBlock;
 
     if (!cache) {
